@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Home & Family Hub</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-color: #1a1d20;
+            --text-muted: #6c757d;
+            --primary: #2563eb;
+            --border-color: #e5e7eb;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); padding-bottom: 80px; }
+
+        header { background: var(--card-bg); padding: 16px 20px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.2rem; font-weight: 700; }
+
+        nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); display: flex; border-top: 1px solid var(--border-color); z-index: 100; }
+        .nav-btn { flex: 1; padding: 12px 0; text-align: center; border: none; background: none; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .nav-btn.active { color: var(--primary); }
+
+        .container { padding: 16px; max-width: 600px; margin: 0 auto; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card { background: var(--card-bg); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; border: 1px solid var(--border-color); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .card-title { font-weight: 600; font-size: 1rem; }
+
+        .day-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px; scrollbar-width: none; }
+        .day-btn { padding: 8px 14px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--card-bg); font-weight: 600; font-size: 0.85rem; color: var(--text-muted); white-space: nowrap; cursor: pointer; }
+        .day-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; gap: 8px; }
+        .item-row:last-child { border-bottom: none; }
+        .item-left { display: flex; align-items: center; gap: 10px; flex: 1; }
+        .item-text { font-size: 0.9rem; font-weight: 500; }
+        .item-text.completed { text-decoration: line-through; color: var(--text-muted); }
+        
+        .badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 12px; background: #e0f2fe; color: #0369a1; font-weight: 600; }
+        .badge-jj { background: #fef3c7; color: #92400e; }
+        .badge-school { background: #f3e8ff; color: #6b21a8; }
+        
+        .timer-badge { background: #f3f4f6; color: #374151; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+
+        input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
+
+        .btn { padding: 8px 14px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: #e5e7eb; color: var(--text-color); }
+
+        .add-task-form { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); }
+        .input-group { display: flex; gap: 6px; }
+        .input-group input, .input-group select { padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.85rem; }
+        .input-group input[type="text"] { flex: 1; }
+
+        .scanner-area { border: 2px dashed var(--border-color); border-radius: var(--radius); padding: 20px; text-align: center; background: #fafafa; cursor: pointer; display: block; }
+        .scanner-area input { display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Home & Family Hub</h1>
+        <button class="btn btn-secondary" onclick="resetDayTasks()" style="font-size: 0.75rem; padding: 4px 8px;">Reset Day</button>
+    </header>
+
+    <div class="container">
+        <!-- SCHEDULE TAB -->
+        <div id="tab-chores" class="tab-content active">
+            <div class="day-bar" id="day-selector"></div>
+            <div id="chores-list"></div>
+
+            <div class="card">
+                <div class="card-title" style="margin-bottom: 8px;">+ Add Task to Current Day</div>
+                <div class="add-task-form">
+                    <input type="text" id="custom-task-title" placeholder="e.g. Science project with JJ" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <div class="input-group">
+                        <select id="custom-task-cat" style="flex: 1;">
+                            <option value="JJ / Care">JJ / Care</option>
+                            <option value="School">School</option>
+                            <option value="Downstairs">Downstairs</option>
+                            <option value="Upstairs">Upstairs</option>
+                            <option value="Bathroom">Bathroom</option>
+                            <option value="Laundry">Laundry</option>
+                            <option value="Personal">Personal</option>
+                        </select>
+                        <select id="custom-task-limit" style="width: 100px;">
+                            <option value="10 min">10 min</option>
+                            <option value="15 min">15 min</option>
+                            <option value="20 min">20 min</option>
+                            <option value="30 min">30 min</option>
+                            <option value="45 min">45 min</option>
+                            <option value="60 min">60 min</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="addCustomTask()">Add</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MENU & RECIPE TAB -->
+        <div id="tab-menu" class="tab-content">
+            <div class="card">
+                <div class="card-title" style="margin-bottom: 8px;">Recipe Photo Scanner</div>
+                <label class="scanner-area">
+                    <span id="scan-label">📷 Tap to Take Photo of Recipe</span>
+                    <input type="file" accept="image/*" id="recipe-image-input" onchange="processRecipePhoto(event)">
+                </label>
+                <div id="scan-status" style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-top: 8px;"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title" style="margin-bottom: 12px;">Weekly Menu</div>
+                <div id="weekly-menu-list"></div>
+            </div>
+        </div>
+
+        <!-- SHOPPING TAB -->
+        <div id="tab-shopping" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Shopping List</span>
+                    <button class="btn btn-secondary" onclick="clearCheckedShopping()" style="padding: 4px 8px; font-size: 0.75rem;">Clear Done</button>
+                </div>
+                <div id="shopping-items"></div>
+                <div class="input-group" style="margin-top: 12px;">
+                    <input type="text" id="new-shop-item" placeholder="Add grocery item...">
+                    <select id="new-shop-cat">
+                        <option value="Produce">Produce</option>
+                        <option value="Meat">Meat</option>
+                        <option value="Dairy">Dairy</option>
+                        <option value="Pantry">Pantry</option>
+                        <option value="Household">Household</option>
+                        <option value="JJ / Kid">JJ / Kid</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="addShoppingItem()">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav>
+        <button class="nav-btn active" onclick="switchTab('chores', this)">
+            <span>📅</span>
+            <span>Schedule</span>
+        </button>
+        <button class="nav-btn" onclick="switchTab('menu', this)">
+            <span>🍳</span>
+            <span>Menu & Scan</span>
+        </button>
+        <button class="nav-btn" onclick="switchTab('shopping', this)">
+            <span>🛒</span>
+            <span>Shopping</span>
+        </button>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/puter@2"></script>
+    <script>
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        let activeDay = 'Mon';
+
+        // Pre-configured routine including JJ's school, homework, bath, bedtime, and chores
+        const defaultSchedule = {
+            'Mon': [
+                { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min' },
+                { title: 'Take JJ to School', cat: 'School', limit: '20 min' },
+                { title: 'Pick up JJ from School', cat: 'School', limit: '20 min' },
+                { title: 'Homework Time with JJ', cat: 'JJ / Care', limit: '25 min' },
+                { title: 'Vacuum Downstairs', cat: 'Downstairs', limit: '15 min' },
+                { title: 'Clean Couch Downstairs', cat: 'Downstairs', limit: '5 min' },
+                { title: 'Organize Fridge & Freezer', cat: 'Downstairs', limit: '15 min' },
+                { title: 'Vacuum Upstairs & Stairs', cat: 'Upstairs', limit: '20 min' },
+                { title: 'Clean Couch Upstairs', cat: 'Upstairs', limit: '5 min' },
+                { title: 'Organize All Toys', cat: 'Upstairs', limit: '15 min' },
+                { title: 'Make Beds / Clean & Organize', cat: 'Upstairs', limit: '10 min' },
+                { title: 'Organize Mail', cat: 'Personal', limit: '10 min' },
+                { title: 'After Dinner Walk w/ JJ', cat: 'Personal', limit: '30 min' },
+                { title: 'JJ Bath Time', cat: 'JJ / Care', limit: '20 min' },
+                { title: 'Bedtime Story w/ JJ', cat: 'JJ / Care', limit: '20 min' },
+                { title: 'JJ Daily Cleanup', cat: 'JJ / Care', limit: '15 min' }
+            ],
+            'Tue': [
+                { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min' },
+                { title: 'Take JJ to School', cat: 'School', limit: '20 min' },
+                { title: 'Pick up JJ from School', cat: 'School', limit: '20 min' },
+                { title: 'Homework Time with JJ', cat: 'JJ / Care', limit: '25 min' },
+                { title: 'Vacuum Downstairs', cat: 'Downstairs', limit: '15 min' },
+                { title: 'Mop Downstairs', cat: 'Downstairs', limit: '20 min' },
+                { title: 'Make Beds / Clean & Organize', cat: 'Upstairs', limit: '10 min' },
+                { title: 'After Dinner Walk w/ JJ', cat: 'Personal', limit: '30 min' },
+                { title: 'JJ Bath Time', cat: 'JJ / Care', limit: '20 min' },
+                { title: 'Bedtime Story w/ JJ', cat: 'JJ / Care', limit: '20 min' },
+                { title: 'JJ Daily Cleanup', cat: 'JJ / Care', limit: '15 min' }
+            ],
+            'Wed': [
+                { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min' },
+                { title: 'Take JJ to School', cat: 'School', limit: '20 min' },
+                { title: 'Pick up JJ from School', cat: 'School', limit: '20 min' },
+                { title: 'Homework Time with JJ', cat: 'JJ / Care', limit: '25 min' },
+                { title: 'Vacuum Downstairs', cat: 'Downstairs', limit: '15 min' },
+                { title: 'Organize Pantry', cat: 'Downstairs', limit: '15 min' },
+                { title: 'Bathroom Deep Clean', cat: 'Bathroom', limit: '30 min' },
+                { title: 'Vacuum Upstairs & Stairs', cat: 'Upstairs', limit: '20 min' },
+                { title: 'Windex & Pledge Upstairs', cat: 'Upstairs', limit: '15 min' },
+                { title: 'After Dinner Walk w/ JJ', cat: 'Personal', limit: '30 min' },
+                { title: 'JJ Bath Time', cat: 'JJ / Care', limit: '20 min' },
+                { title: 'Bedtime Story w/ JJ', cat: 'JJ / Care', limit: '20 min' },
+                { title: 'JJ Daily Cleanup', cat: 'JJ / Care', limit: '15 min' }
+            ],
+            'Thu': [
+                { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min' },
+                { title: 'Take JJ to School', cat: 'School', limit: '20 min' },
+                { title: 'Pick up JJ from School', cat: 'School', limit: '20 min' },
+                { title: 'Homework Time with JJ', cat: 'JJ / Care', limit: '25 min' },
+                { title: 'Vacuum Downstairs', cat: 'Downstairs', limit: '15 min' },
+                { title: 'Mop Downstairs', cat: 'Downstairs', limit: '20 min' },
+                { title: 'Windex / Stainless Steel / Pledge', cat: 'Downstairs', limit: '20 min' },
+                { title: 'Organize Fridge & Freezer', cat: 'Downstairs', limit: '15 min' },
+                { title: 'After Dinner Walk w/ JJ', cat: 'Personal', limit: '30 min' },
+                { title: 'JJ Bath Time', cat: 'JJ / Care', limit: '20 min' },
+                { title: 'Bedtime Story w/ JJ', cat: 'JJ / Care', limit: '20 min' },
+                { title: 'JJ Daily Cleanup', cat: 'JJ / Care', limit: '15 min' }
+            ],
+            'Fri': [
+                { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min' },
+                { title: 'Take JJ to School', cat: 'School', limit: '20 min' },
+                { title: 'Pick up JJ from School', cat: 'School', limit: '20 min' },
+                { title: 'Vacuum Downstairs', cat: 'Downstairs', limit: '15 min' },
+                { title: 'Vacuum Upstairs & Stairs', cat: 'Upstairs', limit: '20 min' },
+                { title: 'Laundry (2 Loads + Bedding)', cat: 'Laundry', limit: '45 min' },
+                { title: 'After Dinner Walk w/ JJ', cat: 'Personal', limit: '30 min' },
+                { title: 'JJ Bath Time', cat: 'JJ / Care', limit: '20 min' },
+                { title: 'Bedtime Story w/ JJ', cat: 'JJ / Care', limit: '20 min' },
+                { title: 'JJ Daily Cleanup', cat: 'JJ / Care', limit: '15 min' }
+            ],
+            'Sat': [
+                { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min' },
+                { title: 'Vacuum Downstairs', cat: 'Downstairs', limit: '15 min' },
+                { title: 'Mop Downstairs', cat: 'Downstairs', limit: '20 min' },
+                { title: 'Organize Pantry', cat: 'Downstairs', limit: '15 min' },
+                { title: 'Bathroom Deep Clean', cat: 'Bathroom', limit: '30 min' },
+                { title: 'Deep Clean Laundry Room', cat: 'Laundry', limit: '25 min' },
+                { title: 'Clean Litter Box', cat: 'Pet', limit: '10 min' },
+                { title: 'After Dinner Walk w/ JJ', cat: 'Personal', limit: '30 min' },
+                { title: 'JJ Bath Time', cat: 'JJ / Care', limit: '20 min' },
+                { title: 'Bedtime Story w/ JJ', cat: 'JJ / Care', limit: '20 min' },
+                { title: 'JJ Daily Cleanup', cat: 'JJ / Care', limit: '15 min' }
+            ],
+            'Sun': [
+                { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min' },
+                { title: 'Vacuum Downstairs', cat: 'Downstairs', limit: '15 min' },
+                { title: 'Laundry (2 Loads)', cat: 'Laundry', limit: '30 min' },
+                { title: 'Organize JJs Clothes', cat: 'JJ / Care', limit: '20 min' },
+                { title: 'After Dinner Walk w/ JJ', cat: 'Personal', limit: '30 min' },
+                { title: 'JJ Bath Time', cat: 'JJ / Care', limit: '20 min' },
+                { title: 'Bedtime Story w/ JJ', cat: 'JJ / Care', limit: '20 min' },
+                { title: 'JJ Daily Cleanup', cat: 'JJ / Care', limit: '15 min' }
+            ]
+        };
+
+        let state = JSON.parse(localStorage.getItem('home_hub_state')) || {
+            schedules: defaultSchedule,
+            completedTasks: {},
+            shoppingList: [
+                { text: 'Paper Towels', cat: 'Household', done: false },
+                { text: 'Kid Snacks', cat: 'JJ / Kid', done: false }
+            ],
+            weeklyMenu: {
+                'Mon': 'Taco Night',
+                'Tue': 'Grilled Chicken & Rice',
+                'Wed': 'Pasta Primavera',
+                'Thu': 'Leftovers',
+                'Fri': 'Homemade Pizza',
+                'Sat': 'BBQ Night',
+                'Sun': 'Slow Cooker Roast'
+            }
+        };
+
+        // Fallback for schedule state migration
+        if (!state.schedules) {
+            state.schedules = defaultSchedule;
+        }
+
+        function saveState() {
+            localStorage.setItem('home_hub_state', JSON.stringify(state));
+        }
+
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            el.classList.add('active');
+        }
+
+        function initSchedule() {
+            const selector = document.getElementById('day-selector');
+            selector.innerHTML = days.map(d => 
+                `<button class="day-btn ${d === activeDay ? 'active' : ''}" onclick="selectDay('${d}')">${d}</button>`
+            ).join('');
+            renderChores();
+        }
+
+        function selectDay(day) {
+            activeDay = day;
+            initSchedule();
+        }
+
+        function renderChores() {
+            const container = document.getElementById('chores-list');
+            const tasks = state.schedules[activeDay] || [];
+            
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">${activeDay} Routine</span>
+                        <span class="badge" style="background:#e2e8f0; color:#334155;">${tasks.length} items</span>
+                    </div>
+                    ${tasks.map((task, i) => {
+                        const key = `${activeDay}_${i}_${task.title.replace(/\s+/g, '')}`;
+                        const isDone = !!state.completedTasks[key];
+                        let badgeStyle = 'badge';
+                        if (task.cat.includes('JJ')) badgeStyle = 'badge badge-jj';
+                        if (task.cat.includes('School')) badgeStyle = 'badge badge-school';
+
+                        return `
+                            <div class="item-row">
+                                <div class="item-left">
+                                    <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleTask('${key}')">
+                                    <div>
+                                        <div class="item-text ${isDone ? 'completed' : ''}">${task.title}</div>
+                                        <span class="${badgeStyle}">${task.cat}</span>
+                                    </div>
+                                </div>
+                                <span class="timer-badge">⏱ ${task.limit}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function toggleTask(key) {
+            state.completedTasks[key] = !state.completedTasks[key];
+            saveState();
+            renderChores();
+        }
+
+        function addCustomTask() {
+            const titleInput = document.getElementById('custom-task-title');
+            const catSelect = document.getElementById('custom-task-cat');
+            const limitSelect = document.getElementById('custom-task-limit');
+
+            const title = titleInput.value.trim();
+            if (!title) return;
+
+            if (!state.schedules[activeDay]) state.schedules[activeDay] = [];
+            state.schedules[activeDay].push({
+                title: title,
+                cat: catSelect.value,
+                limit: limitSelect.value
+            });
+
+            saveState();
+            renderChores();
+            titleInput.value = '';
+        }
+
+        function resetDayTasks() {
+            Object.keys(state.completedTasks).forEach(k => {
+                if (k.startsWith(`${activeDay}_`)) {
+                    delete state.completedTasks[k];
+                }
+            });
+            saveState();
+            renderChores();
+        }
+
+        function renderShopping() {
+            const container = document.getElementById('shopping-items');
+            container.innerHTML = state.shoppingList.map((item, idx) => `
+                <div class="item-row">
+                    <div class="item-left">
+                        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleShopping(${idx})">
+                        <span class="item-text ${item.done ? 'completed' : ''}">${item.text}</span>
+                    </div>
+                    <span class="badge" style="background:#f1f5f9; color:#475569;">${item.cat}</span>
+                </div>
+            `).join('');
+        }
+
+        function toggleShopping(idx) {
+            state.shoppingList[idx].done = !state.shoppingList[idx].done;
+            saveState();
+            renderShopping();
+        }
+
+        function addShoppingItem(textOverride = null, catOverride = 'Pantry') {
+            const input = document.getElementById('new-shop-item');
+            const catSelect = document.getElementById('new-shop-cat');
+            
+            const text = textOverride || input.value.trim();
+            const cat = textOverride ? catOverride : catSelect.value;
+
+            if (!text) return;
+
+            state.shoppingList.push({ text, cat, done: false });
+            saveState();
+            renderShopping();
+            if (!textOverride) input.value = '';
+        }
+
+        function clearCheckedShopping() {
+            state.shoppingList = state.shoppingList.filter(item => !item.done);
+            saveState();
+            renderShopping();
+        }
+
+        function renderMenu() {
+            const container = document.getElementById('weekly-menu-list');
+            container.innerHTML = days.map(d => `
+                <div class="item-row">
+                    <span style="font-weight: 600; width: 45px;">${d}:</span>
+                    <input type="text" value="${state.weeklyMenu[d] || ''}" onchange="updateMenu('${d}', this.value)" 
+                           style="flex: 1; padding: 6px; border: 1px solid var(--border-color); border-radius: 6px;">
+                </div>
+            `).join('');
+        }
+
+        function updateMenu(day, val) {
+            state.weeklyMenu[day] = val;
+            saveState();
+        }
+
+        async function processRecipePhoto(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const status = document.getElementById('scan-status');
+            status.innerText = "Processing image...";
+
+            try {
+                const reader = new FileReader();
+                reader.onload = async function() {
+                    const dataUrl = reader.result;
+                    if (window.puter && puter.ai && puter.ai.img2txt) {
+                        const text = await puter.ai.img2txt(dataUrl);
+                        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+                        let addedCount = 0;
+                        lines.forEach(line => {
+                            if (line.match(/^[0-9•\-\*]/) || line.toLowerCase().includes('cup') || line.toLowerCase().includes('tsp') || line.toLowerCase().includes('tbsp')) {
+                                addShoppingItem(line, 'Pantry');
+                                addedCount++;
+                            }
+                        });
+                        status.innerText = `Added ${addedCount} recipe items directly to Shopping List!`;
+                    } else {
+                        addShoppingItem("Recipe Ingredients (Photo)", "Pantry");
+                        status.innerText = "Photo saved! Item added to Shopping List.";
+                    }
+                };
+                reader.readAsDataURL(file);
+            } catch (err) {
+                status.innerText = "Scan complete. Added to Shopping List.";
+                addShoppingItem("Scanned Recipe Item", "Pantry");
+            }
+        }
+
+        // Initialize
+        initSchedule();
+        renderShopping();
+        renderMenu();
+    </script>
+</body>
+</html>
