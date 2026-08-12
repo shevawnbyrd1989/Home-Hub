@@ -22,7 +22,7 @@
         header h1 { font-size: 1.2rem; font-weight: 700; }
 
         nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); display: flex; border-top: 1px solid var(--border-color); z-index: 100; }
-        .nav-btn { flex: 1; padding: 12px 0; text-align: center; border: none; background: none; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .nav-btn { flex: 1; padding: 10px 0; text-align: center; border: none; background: none; font-size: 0.7rem; font-weight: 600; color: var(--text-muted); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .nav-btn.active { color: var(--primary); }
 
         .container { padding: 16px; max-width: 600px; margin: 0 auto; }
@@ -43,10 +43,7 @@
         .item-text { font-size: 0.9rem; font-weight: 500; }
         .item-text.completed { text-decoration: line-through; color: var(--text-muted); }
         
-        .badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 12px; background: #e0f2fe; color: #0369a1; font-weight: 600; }
-        .badge-jj { background: #fef3c7; color: #92400e; }
-        .badge-school { background: #f3e8ff; color: #6b21a8; }
-        
+        .badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 12px; font-weight: 600; display: inline-block; }
         .timer-badge { background: #f3f4f6; color: #374151; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
 
         input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
@@ -62,6 +59,16 @@
 
         .scanner-area { border: 2px dashed var(--border-color); border-radius: var(--radius); padding: 20px; text-align: center; background: #fafafa; cursor: pointer; display: block; }
         .scanner-area input { display: none; }
+
+        /* Timeline / Calendar Styles */
+        .timeline-event { display: flex; gap: 12px; padding: 12px 0; border-left: 3px solid var(--primary); margin-left: 8px; padding-left: 12px; position: relative; }
+        .timeline-time { font-size: 0.8rem; font-weight: 700; color: var(--primary); min-width: 75px; }
+        .timeline-body { flex: 1; }
+        .timeline-title { font-size: 0.9rem; font-weight: 600; }
+
+        /* Category Manager Styles */
+        .cat-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 16px; font-size: 0.8rem; font-weight: 600; margin: 4px; }
+        .cat-chip button { border: none; background: transparent; cursor: pointer; font-weight: bold; opacity: 0.7; }
     </style>
 </head>
 <body>
@@ -77,20 +84,13 @@
             <div class="day-bar" id="day-selector"></div>
             <div id="chores-list"></div>
 
+            <!-- TASK CREATOR -->
             <div class="card">
                 <div class="card-title" style="margin-bottom: 8px;">+ Add Task to Current Day</div>
                 <div class="add-task-form">
                     <input type="text" id="custom-task-title" placeholder="e.g. Science project with JJ" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color);">
                     <div class="input-group">
-                        <select id="custom-task-cat" style="flex: 1;">
-                            <option value="JJ / Care">JJ / Care</option>
-                            <option value="School">School</option>
-                            <option value="Downstairs">Downstairs</option>
-                            <option value="Upstairs">Upstairs</option>
-                            <option value="Bathroom">Bathroom</option>
-                            <option value="Laundry">Laundry</option>
-                            <option value="Personal">Personal</option>
-                        </select>
+                        <select id="custom-task-cat" style="flex: 1;"></select>
                         <select id="custom-task-limit" style="width: 100px;">
                             <option value="10 min">10 min</option>
                             <option value="15 min">15 min</option>
@@ -102,6 +102,40 @@
                         <button class="btn btn-primary" onclick="addCustomTask()">Add</button>
                     </div>
                 </div>
+            </div>
+
+            <!-- CATEGORY MANAGER -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Manage & Color Code Categories</span>
+                </div>
+                <div id="categories-display" style="margin-bottom: 12px;"></div>
+                
+                <div class="input-group" style="margin-top: 8px;">
+                    <input type="text" id="new-cat-name" placeholder="New Category Name...">
+                    <input type="color" id="new-cat-color" value="#2563eb" style="width: 40px; height: 36px; padding: 2px; cursor: pointer; border-radius: 6px;">
+                    <button class="btn btn-secondary" onclick="addCustomCategory()">Create</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CALENDAR / TIME-BLOCK TAB -->
+        <div id="tab-calendar" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Daily Time-Block Schedule</span>
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
+                        <label>Start At:</label>
+                        <select id="start-time-select" onchange="renderCalendar()" style="padding: 4px; border-radius: 6px; border: 1px solid var(--border-color);">
+                            <option value="6">6:00 AM</option>
+                            <option value="7" selected>7:00 AM</option>
+                            <option value="8">8:00 AM</option>
+                            <option value="9">9:00 AM</option>
+                        </select>
+                    </div>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Timeline built automatically from your tasks and duration limits for <strong id="cal-day-label">Mon</strong>:</p>
+                <div id="timeline-container"></div>
             </div>
         </div>
 
@@ -149,11 +183,15 @@
     <nav>
         <button class="nav-btn active" onclick="switchTab('chores', this)">
             <span>📅</span>
-            <span>Schedule</span>
+            <span>Tasks</span>
+        </button>
+        <button class="nav-btn" onclick="switchTab('calendar', this)">
+            <span>⏰</span>
+            <span>Calendar</span>
         </button>
         <button class="nav-btn" onclick="switchTab('menu', this)">
             <span>🍳</span>
-            <span>Menu & Scan</span>
+            <span>Menu</span>
         </button>
         <button class="nav-btn" onclick="switchTab('shopping', this)">
             <span>🛒</span>
@@ -166,7 +204,17 @@
         const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         let activeDay = 'Mon';
 
-        // Pre-configured routine including JJ's school, homework, bath, bedtime, and chores
+        const defaultCategories = [
+            { name: 'JJ / Care', color: '#d97706', bg: '#fef3c7' },
+            { name: 'School', color: '#7c3aed', bg: '#f3e8ff' },
+            { name: 'Downstairs', color: '#2563eb', bg: '#dbeafe' },
+            { name: 'Upstairs', color: '#0284c7', bg: '#e0f2fe' },
+            { name: 'Bathroom', color: '#0d9488', bg: '#ccfbf1' },
+            { name: 'Laundry', color: '#4f46e5', bg: '#e0e7ff' },
+            { name: 'Personal', color: '#059669', bg: '#d1fae5' },
+            { name: 'Pet', color: '#dc2626', bg: '#fee2e2' }
+        ];
+
         const defaultSchedule = {
             'Mon': [
                 { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min' },
@@ -266,6 +314,7 @@
         };
 
         let state = JSON.parse(localStorage.getItem('home_hub_state')) || {
+            categories: defaultCategories,
             schedules: defaultSchedule,
             completedTasks: {},
             shoppingList: [
@@ -273,23 +322,27 @@
                 { text: 'Kid Snacks', cat: 'JJ / Kid', done: false }
             ],
             weeklyMenu: {
-                'Mon': 'Taco Night',
-                'Tue': 'Grilled Chicken & Rice',
-                'Wed': 'Pasta Primavera',
-                'Thu': 'Leftovers',
-                'Fri': 'Homemade Pizza',
-                'Sat': 'BBQ Night',
-                'Sun': 'Slow Cooker Roast'
+                'Mon': 'Taco Night', 'Tue': 'Grilled Chicken', 'Wed': 'Pasta', 'Thu': 'Leftovers', 'Fri': 'Pizza', 'Sat': 'BBQ', 'Sun': 'Roast'
             }
         };
 
-        // Fallback for schedule state migration
-        if (!state.schedules) {
-            state.schedules = defaultSchedule;
-        }
+        if (!state.categories) state.categories = defaultCategories;
+        if (!state.schedules) state.schedules = defaultSchedule;
 
         function saveState() {
             localStorage.setItem('home_hub_state', JSON.stringify(state));
+        }
+
+        function getCatStyle(catName) {
+            const match = state.categories.find(c => c.name.toLowerCase() === (catName || '').toLowerCase());
+            if (match) {
+                return `background: ${match.bg}; color: ${match.color}; border: 1px solid ${match.color}40;`;
+            }
+            return `background: #e2e8f0; color: #334155;`;
+        }
+
+        function hexToLightBg(hex) {
+            return hex + '20'; // Add opacity for light background tint
         }
 
         function switchTab(tabId, el) {
@@ -297,6 +350,7 @@
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`tab-${tabId}`).classList.add('active');
             el.classList.add('active');
+            if (tabId === 'calendar') renderCalendar();
         }
 
         function initSchedule() {
@@ -304,12 +358,54 @@
             selector.innerHTML = days.map(d => 
                 `<button class="day-btn ${d === activeDay ? 'active' : ''}" onclick="selectDay('${d}')">${d}</button>`
             ).join('');
+            renderCategories();
             renderChores();
         }
 
         function selectDay(day) {
             activeDay = day;
             initSchedule();
+            renderCalendar();
+        }
+
+        function renderCategories() {
+            const display = document.getElementById('categories-display');
+            const select = document.getElementById('custom-task-cat');
+
+            display.innerHTML = state.categories.map((c, i) => `
+                <span class="cat-chip" style="background: ${c.bg}; color: ${c.color}; border: 1px solid ${c.color}60;">
+                    ${c.name}
+                    <button onclick="deleteCategory(${i})" style="color: ${c.color};">×</button>
+                </span>
+            `).join('');
+
+            select.innerHTML = state.categories.map(c => `
+                <option value="${c.name}">${c.name}</option>
+            `).join('');
+        }
+
+        function addCustomCategory() {
+            const nameInput = document.getElementById('new-cat-name');
+            const colorInput = document.getElementById('new-cat-color');
+            const name = nameInput.value.trim();
+
+            if (!name) return;
+
+            const hexColor = colorInput.value;
+            const bgTint = hexToLightBg(hexColor);
+
+            state.categories.push({ name, color: hexColor, bg: bgTint });
+            saveState();
+            renderCategories();
+            renderChores();
+            nameInput.value = '';
+        }
+
+        function deleteCategory(index) {
+            state.categories.splice(index, 1);
+            saveState();
+            renderCategories();
+            renderChores();
         }
 
         function renderChores() {
@@ -325,9 +421,7 @@
                     ${tasks.map((task, i) => {
                         const key = `${activeDay}_${i}_${task.title.replace(/\s+/g, '')}`;
                         const isDone = !!state.completedTasks[key];
-                        let badgeStyle = 'badge';
-                        if (task.cat.includes('JJ')) badgeStyle = 'badge badge-jj';
-                        if (task.cat.includes('School')) badgeStyle = 'badge badge-school';
+                        const styleStr = getCatStyle(task.cat);
 
                         return `
                             <div class="item-row">
@@ -335,7 +429,7 @@
                                     <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleTask('${key}')">
                                     <div>
                                         <div class="item-text ${isDone ? 'completed' : ''}">${task.title}</div>
-                                        <span class="${badgeStyle}">${task.cat}</span>
+                                        <span class="badge" style="${styleStr}">${task.cat}</span>
                                     </div>
                                 </div>
                                 <span class="timer-badge">⏱ ${task.limit}</span>
@@ -344,6 +438,48 @@
                     }).join('')}
                 </div>
             `;
+        }
+
+        function renderCalendar() {
+            const container = document.getElementById('timeline-container');
+            document.getElementById('cal-day-label').innerText = activeDay;
+            const tasks = state.schedules[activeDay] || [];
+            
+            let startHour = parseInt(document.getElementById('start-time-select').value) || 7;
+            let currentMinutes = startHour * 60;
+
+            if (tasks.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted);">No tasks scheduled for this day.</p>';
+                return;
+            }
+
+            container.innerHTML = tasks.map(task => {
+                const duration = parseInt(task.limit) || 15;
+                const startTimeStr = formatTime(currentMinutes);
+                currentMinutes += duration;
+                const endTimeStr = formatTime(currentMinutes);
+                const styleStr = getCatStyle(task.cat);
+
+                return `
+                    <div class="timeline-event">
+                        <div class="timeline-time">${startTimeStr}<br><span style="color:var(--text-muted); font-weight:400;">to ${endTimeStr}</span></div>
+                        <div class="timeline-body">
+                            <div class="timeline-title">${task.title}</div>
+                            <span class="badge" style="${styleStr} font-size:0.65rem;">${task.cat} • ${task.limit}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function formatTime(totalMinutes) {
+            let hours = Math.floor(totalMinutes / 60);
+            let mins = totalMinutes % 60;
+            let ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            let minsStr = mins < 10 ? '0' + mins : mins;
+            return `${hours}:${minsStr} ${ampm}`;
         }
 
         function toggleTask(key) {
@@ -369,6 +505,7 @@
 
             saveState();
             renderChores();
+            renderCalendar();
             titleInput.value = '';
         }
 
