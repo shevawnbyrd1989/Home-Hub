@@ -40,6 +40,7 @@
         .item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; gap: 8px; }
         .item-row:last-child { border-bottom: none; }
         .item-left { display: flex; align-items: center; gap: 10px; flex: 1; }
+        .item-right { display: flex; align-items: center; gap: 6px; }
         .item-text { font-size: 0.9rem; font-weight: 500; }
         .item-text.completed { text-decoration: line-through; color: var(--text-muted); }
         
@@ -51,6 +52,7 @@
         .btn { padding: 8px 14px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-secondary { background: #e5e7eb; color: var(--text-color); }
+        .icon-btn { background: transparent; border: none; cursor: pointer; font-size: 0.9rem; padding: 2px 4px; }
 
         .add-task-form { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); }
         .input-group { display: flex; gap: 6px; }
@@ -69,6 +71,10 @@
         /* Category Manager Styles */
         .cat-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 16px; font-size: 0.8rem; font-weight: 600; margin: 4px; }
         .cat-chip button { border: none; background: transparent; cursor: pointer; font-weight: bold; opacity: 0.7; }
+
+        /* Edit Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 200; justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 400px; border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
     </style>
 </head>
 <body>
@@ -180,6 +186,31 @@
         </div>
     </div>
 
+    <!-- EDIT TASK MODAL -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <div class="card-title">Edit Task</div>
+            <input type="text" id="edit-task-title" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color);">
+            <div class="input-group">
+                <select id="edit-task-cat" style="flex: 1;"></select>
+                <select id="edit-task-limit" style="width: 100px;">
+                    <option value="5 min">5 min</option>
+                    <option value="10 min">10 min</option>
+                    <option value="15 min">15 min</option>
+                    <option value="20 min">20 min</option>
+                    <option value="25 min">25 min</option>
+                    <option value="30 min">30 min</option>
+                    <option value="45 min">45 min</option>
+                    <option value="60 min">60 min</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px;">
+                <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveTaskEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
     <nav>
         <button class="nav-btn active" onclick="switchTab('chores', this)">
             <span>📅</span>
@@ -203,6 +234,7 @@
     <script>
         const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         let activeDay = 'Mon';
+        let editingTaskIndex = null;
 
         const defaultCategories = [
             { name: 'JJ / Care', color: '#d97706', bg: '#fef3c7' },
@@ -342,7 +374,7 @@
         }
 
         function hexToLightBg(hex) {
-            return hex + '20'; // Add opacity for light background tint
+            return hex + '20';
         }
 
         function switchTab(tabId, el) {
@@ -371,6 +403,7 @@
         function renderCategories() {
             const display = document.getElementById('categories-display');
             const select = document.getElementById('custom-task-cat');
+            const editSelect = document.getElementById('edit-task-cat');
 
             display.innerHTML = state.categories.map((c, i) => `
                 <span class="cat-chip" style="background: ${c.bg}; color: ${c.color}; border: 1px solid ${c.color}60;">
@@ -379,9 +412,9 @@
                 </span>
             `).join('');
 
-            select.innerHTML = state.categories.map(c => `
-                <option value="${c.name}">${c.name}</option>
-            `).join('');
+            const catOptionsHtml = state.categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+            select.innerHTML = catOptionsHtml;
+            editSelect.innerHTML = catOptionsHtml;
         }
 
         function addCustomCategory() {
@@ -432,12 +465,49 @@
                                         <span class="badge" style="${styleStr}">${task.cat}</span>
                                     </div>
                                 </div>
-                                <span class="timer-badge">⏱ ${task.limit}</span>
+                                <div class="item-right">
+                                    <span class="timer-badge">⏱ ${task.limit}</span>
+                                    <button class="icon-btn" onclick="openEditModal(${i})" title="Edit Task">✏️</button>
+                                </div>
                             </div>
                         `;
                     }).join('')}
                 </div>
             `;
+        }
+
+        function openEditModal(index) {
+            editingTaskIndex = index;
+            const task = state.schedules[activeDay][index];
+            document.getElementById('edit-task-title').value = task.title;
+            document.getElementById('edit-task-cat').value = task.cat;
+            document.getElementById('edit-task-limit').value = task.limit;
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+            editingTaskIndex = null;
+        }
+
+        function saveTaskEdit() {
+            if (editingTaskIndex === null) return;
+            const newTitle = document.getElementById('edit-task-title').value.trim();
+            const newCat = document.getElementById('edit-task-cat').value;
+            const newLimit = document.getElementById('edit-task-limit').value;
+
+            if (!newTitle) return;
+
+            state.schedules[activeDay][editingTaskIndex] = {
+                title: newTitle,
+                cat: newCat,
+                limit: newLimit
+            };
+
+            saveState();
+            renderChores();
+            renderCalendar();
+            closeEditModal();
         }
 
         function renderCalendar() {
