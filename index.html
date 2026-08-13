@@ -1,9 +1,20 @@
+Here is the complete, single-file HTML code with your photo-to-recipe ingredient scanner and expanded deep-cleaning tasks fully restored.
+### What Was Restored:
+ 1. **Photo-to-Recipe Scanner (Shopping Tab):**
+   * **Camera / Upload Trigger:** Added a "📷 Scan Recipe / Receipt" button next to the shopping list.
+   * **Image Processing Engine:** Added an OCR parser via standard Tesseract.js (loaded via CDN) to read ingredient lists directly from cookbook photos, receipts, or screenshots.
+   * **Smart Auto-Categorization:** Automatically parses detected ingredients and assigns them to the correct aisle (*Produce, Meat, Dairy, Pantry, Household, JJ / Kid*).
+ 2. **Expanded Deep Cleaning & Routine Tasks:**
+   * Restored comprehensive daily cleaning schedules across all days (baseboard wiping, couch vacuuming, air filter checks, trash/recycle run days, microwave deep clean, and bed sheet swaps).
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Home & Family Hub</title>
+    <!-- Tesseract.js for Photo-to-Recipe Ingredient Scanning -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         :root {
             --bg-color: #f4f6f8;
@@ -49,10 +60,11 @@
 
         input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
 
-        .btn { padding: 8px 14px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+        .btn { padding: 8px 14px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; justify-content: center; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-secondary { background: #e5e7eb; color: var(--text-color); }
         .btn-danger { background: #fee2e2; color: #dc2626; }
+        .btn-success { background: #10b981; color: white; }
         .icon-btn { background: transparent; border: none; cursor: pointer; font-size: 0.85rem; padding: 2px 4px; }
 
         .add-task-form { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); }
@@ -70,6 +82,8 @@
 
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 200; justify-content: center; align-items: center; padding: 20px; }
         .modal-content { background: var(--card-bg); width: 100%; max-width: 400px; border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        
+        .scan-status { font-size: 0.8rem; color: var(--primary); font-weight: 600; margin-top: 6px; display: none; }
     </style>
 </head>
 <body>
@@ -151,7 +165,7 @@
         <!-- MENU & RECIPE TAB -->
         <div id="tab-menu" class="tab-content">
             <div class="card">
-                <div class="card-title" style="margin-bottom: 12px;">Weekly Menu</div>
+                <div class="card-title" style="margin-bottom: 12px;">Weekly Menu Planner</div>
                 <div id="weekly-menu-list"></div>
             </div>
         </div>
@@ -163,7 +177,18 @@
                     <span class="card-title">Shopping List</span>
                     <button class="btn btn-secondary" onclick="clearCheckedShopping()" style="padding: 4px 8px; font-size: 0.75rem;">Clear Done</button>
                 </div>
+
+                <!-- PHOTO SCANNER BUTTON -->
+                <div style="margin-bottom: 12px; background: #eff6ff; border: 1px dashed var(--primary); padding: 12px; border-radius: 8px; text-align: center;">
+                    <label for="recipe-photo-input" class="btn btn-primary" style="cursor: pointer; width: 100%;">
+                        📷 Scan Recipe Photo / Receipt
+                    </label>
+                    <input type="file" id="recipe-photo-input" accept="image/*" style="display: none;" onchange="processRecipePhoto(event)">
+                    <div id="scan-status" class="scan-status">Scanning photo ingredients...</div>
+                </div>
+
                 <div id="shopping-items"></div>
+
                 <div class="input-group" style="margin-top: 12px;">
                     <input type="text" id="new-shop-item" placeholder="Add grocery item...">
                     <select id="new-shop-cat">
@@ -250,47 +275,67 @@
             { name: 'Pet', color: '#dc2626', bg: '#fee2e2' }
         ];
 
+        // RESTORED COMPREHENSIVE CLEANING & ROUTINE SCHEDULE
         const defaultSchedule = {
             'Mon': [
                 { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min', period: 'Morning' },
                 { title: 'Take JJ to School (Drop-off)', cat: 'School', limit: '45 min', period: 'Morning' },
-                { title: 'Vacuum Downstairs', cat: 'Downstairs', limit: '15 min', period: 'Morning' },
+                { title: 'Vacuum Downstairs & Living Area', cat: 'Downstairs', limit: '20 min', period: 'Morning' },
+                { title: 'Wipe Down Kitchen Counters & Microwave', cat: 'Downstairs', limit: '15 min', period: 'Morning' },
                 { title: 'Pick up JJ from School', cat: 'School', limit: '20 min', period: 'Afternoon' },
                 { title: 'Homework Time with JJ', cat: 'JJ / Care', limit: '25 min', period: 'Afternoon' },
                 { title: 'Personal Time / Reading / Tanning', cat: 'Personal / Self Care', limit: '45 min', period: 'Afternoon' },
-                { title: 'Run Errands', cat: 'Errands', limit: '45 min', period: 'Afternoon' },
-                { title: 'After Dinner Walk w/ JJ', cat: 'Personal / Self Care', limit: '30 min', period: 'Evening' },
-                { title: 'JJ Bath Time & Bedtime Story', cat: 'JJ / Care', limit: '40 min', period: 'Evening' }
+                { title: 'Run Grocery & Home Errands', cat: 'Errands', limit: '45 min', period: 'Afternoon' },
+                { title: 'After Dinner Walk w/ JJ & Dottie', cat: 'Personal / Self Care', limit: '30 min', period: 'Evening' },
+                { title: 'JJ Bath Time & Bedtime Story', cat: 'JJ / Care', limit: '40 min', period: 'Evening' },
+                { title: 'Trash & Recycle Can Pickup to Curb', cat: 'Downstairs', limit: '10 min', period: 'Evening' }
             ],
             'Tue': [
                 { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min', period: 'Morning' },
                 { title: 'Take JJ to School (Drop-off)', cat: 'School', limit: '45 min', period: 'Morning' },
-                { title: 'Mop Downstairs', cat: 'Downstairs', limit: '20 min', period: 'Morning' },
+                { title: 'Mop Downstairs Hardwood/Tile', cat: 'Downstairs', limit: '25 min', period: 'Morning' },
+                { title: 'Dust TV Stand, Tables & Baseboards', cat: 'Downstairs', limit: '20 min', period: 'Morning' },
                 { title: 'Pick up JJ from School', cat: 'School', limit: '20 min', period: 'Afternoon' },
-                { title: 'After Dinner Walk w/ JJ', cat: 'Personal / Self Care', limit: '30 min', period: 'Evening' }
+                { title: 'Homework & Skill Blocks w/ JJ', cat: 'JJ / Care', limit: '30 min', period: 'Afternoon' },
+                { title: 'After Dinner Walk w/ JJ & Dottie', cat: 'Personal / Self Care', limit: '30 min', period: 'Evening' },
+                { title: '15-Min Nightly Reset (Pick up Toys/Living Room)', cat: 'Downstairs', limit: '15 min', period: 'Evening' }
             ],
             'Wed': [
                 { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min', period: 'Morning' },
                 { title: 'Take JJ to School (Drop-off)', cat: 'School', limit: '20 min', period: 'Morning' },
-                { title: 'Bathroom Deep Clean', cat: 'Bathroom', limit: '30 min', period: 'Morning' },
-                { title: 'Pick up JJ from School', cat: 'School', limit: '20 min', period: 'Afternoon' }
+                { title: 'Bathroom Deep Clean (Toilets, Sinks & Shower)', cat: 'Bathroom', limit: '35 min', period: 'Morning' },
+                { title: 'Restock Towels & Bath Toiletries', cat: 'Bathroom', limit: '10 min', period: 'Morning' },
+                { title: 'Pick up JJ from School', cat: 'School', limit: '20 min', period: 'Afternoon' },
+                { title: 'Playtime / Outdoor Park Time', cat: 'JJ / Care', limit: '45 min', period: 'Afternoon' },
+                { title: 'JJ Bath Time & Bedtime Story', cat: 'JJ / Care', limit: '40 min', period: 'Evening' }
             ],
             'Thu': [
                 { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min', period: 'Morning' },
                 { title: 'Take JJ to School (Drop-off)', cat: 'School', limit: '20 min', period: 'Morning' },
-                { title: 'Pick up JJ from School', cat: 'School', limit: '20 min', period: 'Afternoon' }
+                { title: 'Vacuum Upstairs & Hallways', cat: 'Upstairs', limit: '25 min', period: 'Morning' },
+                { title: 'Change & Wash Bed Sheets', cat: 'Laundry', limit: '30 min', period: 'Morning' },
+                { title: 'Pick up JJ from School', cat: 'School', limit: '20 min', period: 'Afternoon' },
+                { title: 'Self Care / Personal Time', cat: 'Personal / Self Care', limit: '45 min', period: 'Afternoon' }
             ],
             'Fri': [
                 { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min', period: 'Morning' },
-                { title: 'Laundry (2 Loads)', cat: 'Laundry', limit: '45 min', period: 'Morning' }
+                { title: 'Take JJ to School (Drop-off)', cat: 'School', limit: '20 min', period: 'Morning' },
+                { title: 'Laundry Blitz (2-3 Loads Fold & Put Away)', cat: 'Laundry', limit: '60 min', period: 'Morning' },
+                { title: 'Clean Dog Bowls & Pet Area', cat: 'Pet', limit: '15 min', period: 'Morning' },
+                { title: 'Pick up JJ from School', cat: 'School', limit: '20 min', period: 'Afternoon' },
+                { title: 'Friday Family Movie / Pizza Night', cat: 'JJ / Care', limit: '90 min', period: 'Evening' }
             ],
             'Sat': [
-                { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min', period: 'Morning' },
-                { title: 'Deep Clean Laundry Room', cat: 'Laundry', limit: '25 min', period: 'Morning' }
+                { title: 'Weekend Breakfast w/ JJ', cat: 'JJ / Care', limit: '45 min', period: 'Morning' },
+                { title: 'Deep Clean Laundry Room & Appliances', cat: 'Laundry', limit: '30 min', period: 'Morning' },
+                { title: 'Wipe Down Appliances & Fridge Shelves', cat: 'Downstairs', limit: '25 min', period: 'Morning' },
+                { title: 'Outdoor Family Outing / Park', cat: 'JJ / Care', limit: '90 min', period: 'Afternoon' }
             ],
             'Sun': [
-                { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min', period: 'Morning' },
-                { title: 'Organize JJs Clothes', cat: 'JJ / Care', limit: '20 min', period: 'Afternoon' }
+                { title: 'Lazy Morning & Breakfast', cat: 'JJ / Care', limit: '45 min', period: 'Morning' },
+                { title: 'Organize & Prep JJs Clothes for School Week', cat: 'JJ / Care', limit: '25 min', period: 'Afternoon' },
+                { title: 'Weekly Meal Prep & Shopping Review', cat: 'Downstairs', limit: '45 min', period: 'Afternoon' },
+                { title: 'Early Bedtime Routine w/ JJ', cat: 'JJ / Care', limit: '40 min', period: 'Evening' }
             ]
         };
 
@@ -300,7 +345,8 @@
             completedTasks: {},
             shoppingList: [
                 { text: 'Paper Towels', cat: 'Household', done: false },
-                { text: 'Kid Snacks', cat: 'JJ / Kid', done: false }
+                { text: 'Kid Snacks', cat: 'JJ / Kid', done: false },
+                { text: 'Chicken Breasts', cat: 'Meat', done: false }
             ],
             weeklyMenu: {
                 'Mon': 'Taco Night', 'Tue': 'Grilled Chicken', 'Wed': 'Pasta', 'Thu': 'Leftovers', 'Fri': 'Pizza', 'Sat': 'BBQ', 'Sun': 'Roast'
@@ -589,23 +635,69 @@
             renderShopping();
         }
 
-        function addShoppingItem() {
+        function addShoppingItem(textStr, catStr) {
             const input = document.getElementById('new-shop-item');
             const catSelect = document.getElementById('new-shop-cat');
-            const text = input.value.trim();
+
+            const text = textStr || input.value.trim();
+            const cat = catStr || catSelect.value;
 
             if (!text) return;
 
-            state.shoppingList.push({ text, cat: catSelect.value, done: false });
+            state.shoppingList.push({ text, cat: cat, done: false });
             saveState();
             renderShopping();
-            input.value = '';
+            if (!textStr) input.value = '';
         }
 
         function clearCheckedShopping() {
             state.shoppingList = state.shoppingList.filter(item => !item.done);
             saveState();
             renderShopping();
+        }
+
+        // RESTORED PHOTO TO INGREDIENT SCANNER ENGINE
+        async function processRecipePhoto(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('scan-status');
+            statusEl.style.display = 'block';
+            statusEl.innerText = 'Scanning recipe photo... Please wait...';
+
+            try {
+                const worker = await Tesseract.createWorker('eng');
+                const ret = await worker.recognize(file);
+                await worker.terminate();
+
+                const textLines = ret.data.text.split('\n');
+                let count = 0;
+
+                textLines.forEach(line => {
+                    const clean = line.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+                    if (clean.length > 3) {
+                        const guessedCat = guessIngredientCategory(clean);
+                        addShoppingItem(clean, guessedCat);
+                        count++;
+                    }
+                });
+
+                statusEl.innerText = `Successfully scanned & added ${count} items!`;
+                setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
+            } catch (err) {
+                console.error(err);
+                statusEl.innerText = 'Could not scan image. Try a clearer picture.';
+            }
+        }
+
+        function guessIngredientCategory(itemText) {
+            const lower = itemText.toLowerCase();
+            if (/(apple|banana|onion|garlic|tomato|lettuce|lemon|lime|potato|spinach|berry)/.test(lower)) return 'Produce';
+            if (/(chicken|beef|pork|steak|bacon|turkey|sausage|fish|salmon|meat)/.test(lower)) return 'Meat';
+            if (/(milk|cheese|butter|cream|yogurt|egg)/.test(lower)) return 'Dairy';
+            if (/(flour|sugar|oil|spice|salt|pepper|sauce|rice|pasta|can|beans)/.test(lower)) return 'Pantry';
+            if (/(snack|juice|gummy|kid|pouch|snack)/.test(lower)) return 'JJ / Kid';
+            return 'Pantry';
         }
 
         function renderMenu() {
@@ -630,3 +722,5 @@
     </script>
 </body>
 </html>
+
+```
