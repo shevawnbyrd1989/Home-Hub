@@ -1,3 +1,6 @@
+No, the code provided previously contained generic placeholders rather than your exact schedule.
+Here is the updated **index.html** code pre-loaded with your specific custom chore routines, days, and frequencies:
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -93,7 +96,7 @@
                     <span class="card-title">+ Add New Task to <span id="add-task-day-label"></span></span>
                 </div>
                 <div class="add-task-form" style="margin-top:0; padding-top:0; border-top:none;">
-                    <input type="text" id="custom-task-title" placeholder="e.g. Reading time, Errands, Tanning">
+                    <input type="text" id="custom-task-title" placeholder="e.g. Reading time, Tanning">
                     <div class="input-group">
                         <select id="custom-task-cat" style="flex: 1;"></select>
                         <select id="custom-task-limit" style="width: 90px;">
@@ -103,7 +106,6 @@
                             <option value="30 min">30 min</option>
                             <option value="45 min" selected>45 min</option>
                             <option value="60 min">60 min</option>
-                            <option value="90 min">90 min</option>
                         </select>
                         <select id="custom-task-period" style="width: 100px;">
                             <option value="Morning">Morning</option>
@@ -125,7 +127,7 @@
                 <div id="categories-display" style="margin-bottom: 12px;"></div>
                 
                 <div class="input-group" style="margin-top: 8px;">
-                    <input type="text" id="new-cat-name" placeholder="Category name (e.g. Self Care, Errands)">
+                    <input type="text" id="new-cat-name" placeholder="Category name">
                     <input type="color" id="new-cat-color" value="#ec4899" style="width: 40px; height: 36px; padding: 2px; cursor: pointer; border-radius: 6px;">
                     <button class="btn btn-secondary" onclick="addCustomCategory()">Create Category</button>
                 </div>
@@ -147,7 +149,7 @@
                         </select>
                     </div>
                 </div>
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Schedule for <strong id="cal-day-label"></strong> (Adjust task order in Tasks tab to reorder timeline):</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Schedule for <strong id="cal-day-label"></strong>:</p>
                 <div id="timeline-container"></div>
             </div>
         </div>
@@ -168,7 +170,6 @@
                     <button class="btn btn-secondary" onclick="clearCheckedShopping()" style="padding: 4px 8px; font-size: 0.75rem;">Clear Done</button>
                 </div>
 
-                <!-- PHOTO SCANNER BUTTON -->
                 <div style="margin-bottom: 12px; background: #eff6ff; border: 1px dashed var(--primary); padding: 12px; border-radius: 8px; text-align: center;">
                     <label for="recipe-photo-input" class="btn btn-primary" style="cursor: pointer; width: 100%;">
                         📷 Scan Recipe Photo / Receipt
@@ -211,7 +212,6 @@
                     <option value="30 min">30 min</option>
                     <option value="45 min">45 min</option>
                     <option value="60 min">60 min</option>
-                    <option value="90 min">90 min</option>
                 </select>
                 <select id="edit-task-period" style="width: 100px;">
                     <option value="Morning">Morning</option>
@@ -249,10 +249,9 @@
     </nav>
 
     <script>
-        // Generate actual dates starting today (Aug 12, 2026) for 7 days
-        const baseDate = new Date(2026, 7, 12); // Months are 0-indexed (7 = August)
+        const baseDate = new Date(2026, 7, 12); // Wed, Aug 12, 2026
         const days = [];
-        const dateKeyMap = {};
+        const dateDayMap = [];
 
         for (let i = 0; i < 7; i++) {
             const d = new Date(baseDate);
@@ -264,110 +263,99 @@
             
             const fullLabel = `${dayName}, ${monthName} ${dayNum}`;
             days.push(fullLabel);
-            
-            // Map index to full label string
-            dateKeyMap[i] = fullLabel;
+            dateDayMap.push({ label: fullLabel, dayOfWeek: dayName });
         }
 
-        let activeDay = days[0]; // Default to today
+        let activeDay = days[0];
         let editingTaskIndex = null;
 
         const defaultCategories = [
-            { name: 'JJ / Care', color: '#d97706', bg: '#fef3c7' },
-            { name: 'School', color: '#7c3aed', bg: '#f3e8ff' },
             { name: 'Downstairs', color: '#2563eb', bg: '#dbeafe' },
             { name: 'Upstairs', color: '#0284c7', bg: '#e0f2fe' },
             { name: 'Bathroom', color: '#0d9488', bg: '#ccfbf1' },
             { name: 'Laundry', color: '#4f46e5', bg: '#e0e7ff' },
-            { name: 'Personal / Self Care', color: '#ec4899', bg: '#fce7f3' },
-            { name: 'Errands', color: '#059669', bg: '#d1fae5' },
-            { name: 'Pet', color: '#dc2626', bg: '#fee2e2' }
+            { name: 'Routine & Mail', color: '#d97706', bg: '#fef3c7' },
+            { name: 'Pets', color: '#dc2626', bg: '#fee2e2' }
         ];
 
-        // Seed initial schedules for the generated date strings
+        function getTasksForDayName(dayOfWeek, isLaundryDay) {
+            const tasks = [];
+
+            // Daily Downstairs
+            tasks.push({ title: 'Vacuum Downstairs', cat: 'Downstairs', limit: '20 min', period: 'Morning' });
+            tasks.push({ title: 'Clean Downstairs Couch', cat: 'Downstairs', limit: '10 min', period: 'Morning' });
+
+            // Specific Downstairs Days
+            if (['Tue', 'Thu', 'Sat'].includes(dayOfWeek)) {
+                tasks.push({ title: 'Mop Downstairs', cat: 'Downstairs', limit: '20 min', period: 'Morning' });
+            }
+            if (dayOfWeek === 'Thu') {
+                tasks.push({ title: 'Windex / Stainless Steel / Pledge Downstairs', cat: 'Downstairs', limit: '25 min', period: 'Morning' });
+            }
+            if (['Wed', 'Sun', 'Sat'].includes(dayOfWeek)) {
+                tasks.push({ title: 'Organize Pantry', cat: 'Downstairs', limit: '15 min', period: 'Afternoon' });
+            }
+            if (['Mon', 'Thu'].includes(dayOfWeek)) {
+                tasks.push({ title: 'Organize Fridge / Freezer', cat: 'Downstairs', limit: '20 min', period: 'Afternoon' });
+            }
+
+            // Bathroom Deep Clean
+            if (['Wed', 'Sat'].includes(dayOfWeek)) {
+                tasks.push({ title: 'Bathroom Deep Clean', cat: 'Bathroom', limit: '35 min', period: 'Morning' });
+            }
+
+            // Daily Upstairs
+            tasks.push({ title: 'Make Beds, Clean & Organize Bedrooms', cat: 'Upstairs', limit: '20 min', period: 'Morning' });
+
+            // Specific Upstairs Days
+            if (['Mon', 'Wed', 'Fri'].includes(dayOfWeek)) {
+                tasks.push({ title: 'Vacuum Upstairs & Stairs + Clean Couch', cat: 'Upstairs', limit: '30 min', period: 'Morning' });
+            }
+            if (dayOfWeek === 'Mon') {
+                tasks.push({ title: 'Organize All Toys', cat: 'Upstairs', limit: '25 min', period: 'Afternoon' });
+            }
+            if (dayOfWeek === 'Wed') {
+                tasks.push({ title: 'Windex / Pledge Upstairs', cat: 'Upstairs', limit: '20 min', period: 'Morning' });
+            }
+
+            // Laundry Routine
+            if (isLaundryDay) {
+                tasks.push({ title: 'Laundry (2 Loads + Bedding if needed)', cat: 'Laundry', limit: '45 min', period: 'Afternoon' });
+            }
+            if (dayOfWeek === 'Sat') {
+                tasks.push({ title: 'Deep Clean Laundry Room', cat: 'Laundry', limit: '30 min', period: 'Morning' });
+                tasks.push({ title: 'Clean Litter Box', cat: 'Pets', limit: '15 min', period: 'Morning' });
+            }
+
+            // Mail & Daily Routine
+            if (dayOfWeek === 'Mon') {
+                tasks.push({ title: 'Organize Mail', cat: 'Routine & Mail', limit: '15 min', period: 'Afternoon' });
+            }
+            tasks.push({ title: 'After Dinner Walk w/ JJ', cat: 'Routine & Mail', limit: '30 min', period: 'Evening' });
+
+            return tasks;
+        }
+
         const initialSchedules = {};
-        const templateSchedules = [
-            [
-                { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min', period: 'Morning' },
-                { title: 'Take JJ to School (Drop-off)', cat: 'School', limit: '45 min', period: 'Morning' },
-                { title: 'Bathroom Deep Clean (Toilets, Sinks & Shower)', cat: 'Bathroom', limit: '35 min', period: 'Morning' },
-                { title: 'Restock Towels & Bath Toiletries', cat: 'Bathroom', limit: '10 min', period: 'Morning' },
-                { title: 'Pick up JJ from School', cat: 'School', limit: '20 min', period: 'Afternoon' },
-                { title: 'Playtime / Outdoor Park Time', cat: 'JJ / Care', limit: '45 min', period: 'Afternoon' },
-                { title: 'JJ Bath Time & Bedtime Story', cat: 'JJ / Care', limit: '40 min', period: 'Evening' }
-            ],
-            [
-                { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min', period: 'Morning' },
-                { title: 'Take JJ to School (Drop-off)', cat: 'School', limit: '20 min', period: 'Morning' },
-                { title: 'Vacuum Upstairs & Hallways', cat: 'Upstairs', limit: '25 min', period: 'Morning' },
-                { title: 'Change & Wash Bed Sheets', cat: 'Laundry', limit: '30 min', period: 'Morning' },
-                { title: 'Pick up JJ from School', cat: 'School', limit: '20 min', period: 'Afternoon' },
-                { title: 'Self Care / Personal Time', cat: 'Personal / Self Care', limit: '45 min', period: 'Afternoon' }
-            ],
-            [
-                { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min', period: 'Morning' },
-                { title: 'Take JJ to School (Drop-off)', cat: 'School', limit: '20 min', period: 'Morning' },
-                { title: 'Laundry Blitz (2-3 Loads Fold & Put Away)', cat: 'Laundry', limit: '60 min', period: 'Morning' },
-                { title: 'Clean Dog Bowls & Pet Area', cat: 'Pet', limit: '15 min', period: 'Morning' },
-                { title: 'Pick up JJ from School', cat: 'School', limit: '20 min', period: 'Afternoon' },
-                { title: 'Friday Family Movie / Pizza Night', cat: 'JJ / Care', limit: '90 min', period: 'Evening' }
-            ],
-            [
-                { title: 'Weekend Breakfast w/ JJ', cat: 'JJ / Care', limit: '45 min', period: 'Morning' },
-                { title: 'Deep Clean Laundry Room & Appliances', cat: 'Laundry', limit: '30 min', period: 'Morning' },
-                { title: 'Wipe Down Appliances & Fridge Shelves', cat: 'Downstairs', limit: '25 min', period: 'Morning' },
-                { title: 'Outdoor Family Outing / Park', cat: 'JJ / Care', limit: '90 min', period: 'Afternoon' }
-            ],
-            [
-                { title: 'Lazy Morning & Breakfast', cat: 'JJ / Care', limit: '45 min', period: 'Morning' },
-                { title: 'Organize & Prep JJs Clothes for School Week', cat: 'JJ / Care', limit: '25 min', period: 'Afternoon' },
-                { title: 'Weekly Meal Prep & Shopping Review', cat: 'Downstairs', limit: '45 min', period: 'Afternoon' },
-                { title: 'Early Bedtime Routine w/ JJ', cat: 'JJ / Care', limit: '40 min', period: 'Evening' }
-            ],
-            [
-                { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min', period: 'Morning' },
-                { title: 'Take JJ to School (Drop-off)', cat: 'School', limit: '45 min', period: 'Morning' },
-                { title: 'Vacuum Downstairs & Living Area', cat: 'Downstairs', limit: '20 min', period: 'Morning' },
-                { title: 'Wipe Down Kitchen Counters & Microwave', cat: 'Downstairs', limit: '15 min', period: 'Morning' },
-                { title: 'Pick up JJ from School', cat: 'School', limit: '20 min', period: 'Afternoon' },
-                { title: 'Homework Time with JJ', cat: 'JJ / Care', limit: '25 min', period: 'Afternoon' },
-                { title: 'Personal Time / Reading / Tanning', cat: 'Personal / Self Care', limit: '45 min', period: 'Afternoon' }
-            ],
-            [
-                { title: 'Breakfast & Morning Routine w/ JJ', cat: 'JJ / Care', limit: '30 min', period: 'Morning' },
-                { title: 'Take JJ to School (Drop-off)', cat: 'School', limit: '45 min', period: 'Morning' },
-                { title: 'Mop Downstairs Hardwood/Tile', cat: 'Downstairs', limit: '25 min', period: 'Morning' },
-                { title: 'Dust TV Stand, Tables & Baseboards', cat: 'Downstairs', limit: '20 min', period: 'Morning' },
-                { title: 'Pick up JJ from School', cat: 'School', limit: '20 min', period: 'Afternoon' }
-            ]
-        ];
-
-        days.forEach((d, idx) => {
-            initialSchedules[d] = templateSchedules[idx % templateSchedules.length];
+        // Starting Friday (index 2: Wed, Thu, Fri...)
+        dateDayMap.forEach((item, idx) => {
+            const isLaundry = idx >= 2 && (idx % 2 === 0); 
+            initialSchedules[item.label] = getTasksForDayName(item.dayOfWeek, isLaundry);
         });
 
-        let state = JSON.parse(localStorage.getItem('home_hub_state_v3')) || {
+        let state = JSON.parse(localStorage.getItem('home_hub_state_v4')) || {
             categories: defaultCategories,
             schedules: initialSchedules,
             completedTasks: {},
             shoppingList: [
                 { text: 'Paper Towels', cat: 'Household', done: false },
-                { text: 'Kid Snacks', cat: 'JJ / Kid', done: false },
-                { text: 'Chicken Breasts', cat: 'Meat', done: false }
+                { text: 'Kid Snacks', cat: 'JJ / Kid', done: false }
             ],
-            weeklyMenu: {
-                [days[0]]: 'Pasta', 
-                [days[1]]: 'Leftovers', 
-                [days[2]]: 'Pizza Night', 
-                [days[3]]: 'BBQ Night', 
-                [days[4]]: 'Roast Dinner',
-                [days[5]]: 'Taco Night',
-                [days[6]]: 'Grilled Chicken'
-            }
+            weeklyMenu: {}
         };
 
         function saveState() {
-            localStorage.setItem('home_hub_state_v3', JSON.stringify(state));
+            localStorage.setItem('home_hub_state_v4', JSON.stringify(state));
         }
 
         function getCatStyle(catName) {
@@ -464,7 +452,7 @@
             container.innerHTML = `
                 <div class="card">
                     <div class="card-header">
-                        <span class="card-title">${activeDay} Schedule</span>
+                        <span class="card-title">${activeDay} Routine</span>
                         <span class="badge" style="background:#e2e8f0; color:#334155;">${tasks.length} tasks</span>
                     </div>
                     ${tasks.map((task, i) => {
@@ -734,3 +722,5 @@
     </script>
 </body>
 </html>
+
+```
