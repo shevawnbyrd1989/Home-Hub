@@ -1,478 +1,738 @@
-<script>
-    // Rolling 7-day selector setup
-    const todayObj = new Date();
-    const dateDayMap = [];
-    let todayLabel = '';
-
-    for (let i = 0; i < 7; i++) {
-        const d = new Date();
-        d.setDate(todayObj.getDate() + i);
-        
-        const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-        const monthName = d.toLocaleDateString('en-US', { month: 'short' });
-        const dayNum = d.getDate();
-        const dayOfWeekIndex = d.getDay(); // 0 = Sun, 1 = Mon, ... 6 = Sat
-        
-        const fullLabel = `${dayName}, ${monthName} ${dayNum}`;
-        const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        
-        if (i === 0) todayLabel = fullLabel;
-
-        dateDayMap.push({ 
-            label: fullLabel, 
-            dayOfWeek: dayName, 
-            dayIndex: dayOfWeekIndex, 
-            dateKey: dateKey, 
-            isToday: i === 0 
-        });
-    }
-
-    let activeDayObj = dateDayMap[0];
-    let editingTaskIndex = null;
-
-    const defaultCategories = [
-        { name: 'Downstairs', color: '#2563eb', bg: '#dbeafe' },
-        { name: 'Upstairs', color: '#0284c7', bg: '#e0f2fe' },
-        { name: 'Bathroom', color: '#0d9488', bg: '#ccfbf1' },
-        { name: 'Laundry', color: '#4f46e5', bg: '#e0e7ff' },
-        { name: 'Routine & Mail', color: '#d97706', bg: '#fef3c7' },
-        { name: 'Pets', color: '#dc2626', bg: '#fee2e2' },
-        { name: 'Family & School', color: '#16a34a', bg: '#dcfce7' }
-    ];
-
-    // Recurring base template (0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat)
-    const defaultRecurringTasks = [
-        // Daily
-        { id: '1', title: 'Vacuum Downstairs', cat: 'Downstairs', limit: '20 min', period: 'Morning', daysOfWeek: [0,1,2,3,4,5,6] },
-        { id: '2', title: 'Clean Downstairs Couch', cat: 'Downstairs', limit: '10 min', period: 'Morning', daysOfWeek: [0,1,2,3,4,5,6] },
-        { id: '3', title: 'Make Beds, Clean & Organize Bedrooms', cat: 'Upstairs', limit: '20 min', period: 'Morning', daysOfWeek: [0,1,2,3,4,5,6] },
-        { id: '4', title: 'After Dinner Walk w/ JJ', cat: 'Routine & Mail', limit: '30 min', period: 'Evening', daysOfWeek: [0,1,2,3,4,5,6] },
-        
-        // Specific Days
-        { id: '5', title: 'Mop Downstairs', cat: 'Downstairs', limit: '20 min', period: 'Morning', daysOfWeek: [2, 4, 6] }, // Tue, Thu, Sat
-        { id: '6', title: 'Windex / Stainless Steel / Pledge Downstairs', cat: 'Downstairs', limit: '25 min', period: 'Morning', daysOfWeek: [4] }, // Thu
-        { id: '7', title: 'Organize Pantry', cat: 'Downstairs', limit: '15 min', period: 'Afternoon', daysOfWeek: [0, 3, 6] }, // Sun, Wed, Sat
-        { id: '8', title: 'Organize Fridge / Freezer', cat: 'Downstairs', limit: '20 min', period: 'Afternoon', daysOfWeek: [1, 4] }, // Mon, Thu
-        { id: '9', title: 'Bathroom Deep Clean', cat: 'Bathroom', limit: '35 min', period: 'Morning', daysOfWeek: [3, 6] }, // Wed, Sat
-        { id: '10', title: 'Vacuum Upstairs & Stairs + Clean Couch', cat: 'Upstairs', limit: '30 min', period: 'Morning', daysOfWeek: [1, 3, 5] }, // Mon, Wed, Fri
-        { id: '11', title: 'Organize All Toys', cat: 'Upstairs', limit: '25 min', period: 'Afternoon', daysOfWeek: [1] }, // Mon
-        { id: '12', title: 'Windex / Pledge Upstairs', cat: 'Upstairs', limit: '20 min', period: 'Morning', daysOfWeek: [3] }, // Wed
-        { id: '13', title: 'Laundry (2 Loads + Bedding)', cat: 'Laundry', limit: '45 min', period: 'Afternoon', daysOfWeek: [0, 2, 4, 6] },
-        { id: '14', title: 'Deep Clean Laundry Room', cat: 'Laundry', limit: '30 min', period: 'Morning', daysOfWeek: [6] }, // Sat
-        { id: '15', title: 'Clean Litter Box', cat: 'Pets', limit: '15 min', period: 'Morning', daysOfWeek: [6] }, // Sat
-        { id: '16', title: 'Organize Mail', cat: 'Routine & Mail', limit: '15 min', period: 'Afternoon', daysOfWeek: [1] } // Mon
-    ];
-
-    let state = JSON.parse(localStorage.getItem('home_hub_state_v6')) || {
-        categories: defaultCategories,
-        recurringTasks: defaultRecurringTasks,
-        oneTimeTasks: [], // [{ id, title, cat, limit, period, dateKey }]
-        completedTasks: {},
-        shoppingList: [
-            { text: 'Paper Towels', cat: 'Household', done: false },
-            { text: 'Kid Snacks', cat: 'JJ / Kid', done: false }
-        ],
-        weeklyMenu: {}
-    };
-
-    function saveState() {
-        localStorage.setItem('home_hub_state_v6', JSON.stringify(state));
-    }
-
-    function getCatStyle(catName) {
-        const match = state.categories.find(c => c.name.toLowerCase() === (catName || '').toLowerCase());
-        if (match) {
-            return `background: ${match.bg}; color: ${match.color}; border: 1px solid ${match.color}40;`;
+The blank screen happens because editingTaskId was declared implicitly in the previous snippet, which causes JavaScript execution to crash silently before rendering the page content.
+Here is the entire complete, fixed, self-contained single HTML file. Copy and paste this directly into your file to replace everything:
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Home & Family Hub</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-color: #1a1d20;
+            --text-muted: #6c757d;
+            --primary: #2563eb;
+            --border-color: #e5e7eb;
+            --radius: 12px;
         }
-        return `background: #e2e8f0; color: #334155;`;
-    }
 
-    function switchTab(tabId, el) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`tab-${tabId}`).classList.add('active');
-        el.classList.add('active');
-        if (tabId === 'calendar') renderCalendar();
-    }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); padding-bottom: 80px; }
 
-    function initSchedule() {
-        const selector = document.getElementById('day-selector');
-        selector.innerHTML = dateDayMap.map(d => `
-            <button class="day-btn ${d.label === activeDayObj.label ? 'active' : ''}" onclick="selectDay('${d.dateKey}')">
-                ${d.label} ${d.isToday ? '<span class="today-badge">TODAY</span>' : ''}
-            </button>
-        `).join('');
+        header { background: var(--card-bg); padding: 16px 20px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.2rem; font-weight: 700; }
+
+        nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); display: flex; border-top: 1px solid var(--border-color); z-index: 100; }
+        .nav-btn { flex: 1; padding: 10px 0; text-align: center; border: none; background: none; font-size: 0.7rem; font-weight: 600; color: var(--text-muted); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .nav-btn.active { color: var(--primary); }
+
+        .container { padding: 16px; max-width: 600px; margin: 0 auto; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card { background: var(--card-bg); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; border: 1px solid var(--border-color); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .card-title { font-weight: 600; font-size: 1rem; }
+
+        .day-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px; scrollbar-width: none; }
+        .day-btn { padding: 8px 14px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--card-bg); font-weight: 600; font-size: 0.85rem; color: var(--text-muted); white-space: nowrap; cursor: pointer; position: relative; }
+        .day-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .today-badge { font-size: 0.65rem; background: #ef4444; color: white; padding: 2px 6px; border-radius: 10px; margin-left: 4px; font-weight: 700; }
+
+        .item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; gap: 8px; }
+        .item-row:last-child { border-bottom: none; }
+        .item-left { display: flex; align-items: center; gap: 8px; flex: 1; }
+        .item-right { display: flex; align-items: center; gap: 4px; }
+        .item-text { font-size: 0.9rem; font-weight: 500; }
+        .item-text.completed { text-decoration: line-through; color: var(--text-muted); }
         
-        document.getElementById('add-task-day-label').innerText = activeDayObj.label;
+        .badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 12px; font-weight: 600; display: inline-block; }
+        .timer-badge { background: #f3f4f6; color: #374151; padding: 3px 6px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+
+        input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
+
+        .btn { padding: 8px 14px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; justify-content: center; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: #e5e7eb; color: var(--text-color); }
+        .btn-danger { background: #fee2e2; color: #dc2626; }
+        .icon-btn { background: transparent; border: none; cursor: pointer; font-size: 0.85rem; padding: 2px 4px; }
+
+        .add-task-form { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); }
+        .input-group { display: flex; gap: 6px; flex-wrap: wrap; }
+        .input-group input, .input-group select { padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.85rem; }
+        .input-group input[type="text"] { flex: 1; min-width: 140px; }
+
+        .cat-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 16px; font-size: 0.8rem; font-weight: 600; margin: 4px 2px; }
+        .cat-chip button { border: none; background: transparent; cursor: pointer; font-weight: bold; opacity: 0.7; }
+
+        .timeline-event { display: flex; gap: 12px; padding: 12px 0; border-left: 4px solid var(--primary); margin-left: 8px; padding-left: 12px; position: relative; background: #fafafa; border-radius: 0 8px 8px 0; margin-bottom: 8px; }
+        .timeline-time { font-size: 0.8rem; font-weight: 700; color: var(--primary); min-width: 80px; }
+        .timeline-body { flex: 1; }
+        .timeline-title { font-size: 0.9rem; font-weight: 600; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 200; justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 420px; border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
         
-        // Update form dropdown with Sunday through Thursday option
-        const repeatSelect = document.getElementById('custom-task-repeat');
-        repeatSelect.innerHTML = `
-            <option value="none">This Day Only</option>
-            <option value="daily">Every Day (Mon-Sun)</option>
-            <option value="school">School Week (Sun-Thu)</option>
-            <option value="weekend">Weekend (Fri-Sat)</option>
-            <option value="this_day_weekly">Every ${activeDayObj.dayOfWeek} (Indefinitely)</option>
-        `;
+        .scan-status { font-size: 0.8rem; color: var(--primary); font-weight: 600; margin-top: 6px; display: none; }
+    </style>
+</head>
+<body>
 
-        renderCategories();
-        renderChores();
-    }
+    <header>
+        <h1>Home & Family Hub</h1>
+        <button class="btn btn-secondary" onclick="resetDayTasks()" style="font-size: 0.75rem; padding: 4px 8px;">Reset Checkmarks</button>
+    </header>
 
-    function selectDay(dateKey) {
-        activeDayObj = dateDayMap.find(d => d.dateKey === dateKey) || dateDayMap[0];
-        initSchedule();
-        renderCalendar();
-    }
-
-    function getActiveDayTasks() {
-        const recurring = state.recurringTasks.filter(t => t.daysOfWeek.includes(activeDayObj.dayIndex));
-        const oneTime = state.oneTimeTasks.filter(t => t.dateKey === activeDayObj.dateKey);
-        return [...recurring, ...oneTime];
-    }
-
-    function renderCategories() {
-        const display = document.getElementById('categories-display');
-        const select = document.getElementById('custom-task-cat');
-        const editSelect = document.getElementById('edit-task-cat');
-
-        display.innerHTML = state.categories.map((c, i) => `
-            <span class="cat-chip" style="background: ${c.bg}; color: ${c.color}; border: 1px solid ${c.color}60;">
-                ${c.name}
-                <button onclick="deleteCategory(${i})" style="color: ${c.color};">×</button>
-            </span>
-        `).join('');
-
-        const catOptionsHtml = state.categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-        select.innerHTML = catOptionsHtml;
-        editSelect.innerHTML = catOptionsHtml;
-    }
-
-    function addCustomCategory() {
-        const nameInput = document.getElementById('new-cat-name');
-        const colorInput = document.getElementById('new-cat-color');
-        const name = nameInput.value.trim();
-
-        if (!name) return;
-
-        const hexColor = colorInput.value;
-        const bgTint = hexColor + '20';
-
-        state.categories.push({ name, color: hexColor, bg: bgTint });
-        saveState();
-        renderCategories();
-        renderChores();
-        nameInput.value = '';
-    }
-
-    function deleteCategory(index) {
-        state.categories.splice(index, 1);
-        saveState();
-        renderCategories();
-        renderChores();
-    }
-
-    function renderChores() {
-        const container = document.getElementById('chores-list');
-        const tasks = getActiveDayTasks();
-        
-        container.innerHTML = `
+    <div class="container">
+        <!-- TASKS / ROUTINE TAB -->
+        <div id="tab-chores" class="tab-content active">
+            <div class="day-bar" id="day-selector"></div>
+            
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">${activeDayObj.label} Routine</span>
-                    <span class="badge" style="background:#e2e8f0; color:#334155;">${tasks.length} tasks</span>
+                    <span class="card-title">+ Add New Task to <span id="add-task-day-label"></span></span>
                 </div>
-                ${tasks.map((task, i) => {
-                    const key = `${activeDayObj.dateKey}_${task.id}`;
-                    const isDone = !!state.completedTasks[key];
-                    const styleStr = getCatStyle(task.cat);
-
-                    return `
-                        <div class="item-row">
-                            <div class="item-left">
-                                <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleTask('${key}')">
-                                <div>
-                                    <div class="item-text ${isDone ? 'completed' : ''}">${task.title}</div>
-                                    <div style="display:flex; gap:4px; margin-top:2px; align-items:center;">
-                                        <span class="badge" style="${styleStr}">${task.cat}</span>
-                                        <span class="badge" style="background:#f3f4f6; color:#6b7280;">${task.period || 'Morning'}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="item-right">
-                                <span class="timer-badge">⏱ ${task.limit}</span>
-                                <button class="icon-btn" onclick="openEditModal('${task.id}')" title="Edit Task">✏️</button>
-                            </div>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        `;
-    }
-
-    function addCustomTask() {
-        const titleInput = document.getElementById('custom-task-title');
-        const catSelect = document.getElementById('custom-task-cat');
-        const limitSelect = document.getElementById('custom-task-limit');
-        const periodSelect = document.getElementById('custom-task-period');
-        const repeatSelect = document.getElementById('custom-task-repeat');
-
-        const title = titleInput.value.trim();
-        if (!title) return;
-
-        const mode = repeatSelect.value;
-        const newId = 'task_' + Date.now();
-
-        if (mode === 'none') {
-            state.oneTimeTasks.push({
-                id: newId,
-                title,
-                cat: catSelect.value,
-                limit: limitSelect.value,
-                period: periodSelect.value,
-                dateKey: activeDayObj.dateKey
-            });
-        } else {
-            let daysOfWeek = [];
-            if (mode === 'daily') daysOfWeek = [0, 1, 2, 3, 4, 5, 6];
-            if (mode === 'school') daysOfWeek = [0, 1, 2, 3, 4]; // Sunday through Thursday
-            if (mode === 'weekend') daysOfWeek = [5, 6]; // Friday and Saturday
-            if (mode === 'this_day_weekly') daysOfWeek = [activeDayObj.dayIndex];
-
-            state.recurringTasks.push({
-                id: newId,
-                title,
-                cat: catSelect.value,
-                limit: limitSelect.value,
-                period: periodSelect.value,
-                daysOfWeek
-            });
-        }
-
-        saveState();
-        renderChores();
-        renderCalendar();
-        titleInput.value = '';
-        repeatSelect.value = 'none';
-    }
-
-    function openEditModal(taskId) {
-        let task = state.recurringTasks.find(t => t.id === taskId) || state.oneTimeTasks.find(t => t.id === taskId);
-        if (!task) return;
-
-        editingTaskId = taskId;
-        document.getElementById('edit-task-title').value = task.title;
-        document.getElementById('edit-task-cat').value = task.cat;
-        document.getElementById('edit-task-limit').value = task.limit;
-        document.getElementById('edit-task-period').value = task.period || 'Morning';
-
-        const moveSelect = document.getElementById('edit-task-move-day');
-        moveSelect.innerHTML = dateDayMap.map(d => `<option value="${d.dateKey}" ${d.dateKey === activeDayObj.dateKey ? 'selected' : ''}>${d.label}</option>`).join('');
-
-        document.getElementById('edit-modal').style.display = 'flex';
-    }
-
-    function closeEditModal() {
-        document.getElementById('edit-modal').style.display = 'none';
-        editingTaskId = null;
-    }
-
-    function saveTaskEdit() {
-        if (!editingTaskId) return;
-
-        const newTitle = document.getElementById('edit-task-title').value.trim();
-        const newCat = document.getElementById('edit-task-cat').value;
-        const newLimit = document.getElementById('edit-task-limit').value;
-        const newPeriod = document.getElementById('edit-task-period').value;
-
-        let task = state.recurringTasks.find(t => t.id === editingTaskId) || state.oneTimeTasks.find(t => t.id === editingTaskId);
-        if (task) {
-            task.title = newTitle;
-            task.cat = newCat;
-            task.limit = newLimit;
-            task.period = newPeriod;
-        }
-
-        saveState();
-        renderChores();
-        renderCalendar();
-        closeEditModal();
-    }
-
-    function deleteCurrentTask() {
-        if (!editingTaskId) return;
-
-        state.recurringTasks = state.recurringTasks.filter(t => t.id !== editingTaskId);
-        state.oneTimeTasks = state.oneTimeTasks.filter(t => t.id !== editingTaskId);
-
-        saveState();
-        renderChores();
-        renderCalendar();
-        closeEditModal();
-    }
-
-    function renderCalendar() {
-        const container = document.getElementById('timeline-container');
-        document.getElementById('cal-day-label').innerText = activeDayObj.label;
-        const tasks = getActiveDayTasks();
-        
-        let startHour = parseInt(document.getElementById('start-time-select').value) || 7;
-        let currentMinutes = startHour * 60;
-
-        if (tasks.length === 0) {
-            container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem; padding: 12px 0;">No tasks scheduled for this day.</p>';
-            return;
-        }
-
-        container.innerHTML = tasks.map(task => {
-            const duration = parseInt(task.limit) || 15;
-            const startTimeStr = formatTime(currentMinutes);
-            currentMinutes += duration;
-            const endTimeStr = formatTime(currentMinutes);
-            const styleStr = getCatStyle(task.cat);
-
-            return `
-                <div class="timeline-event">
-                    <div class="timeline-time">${startTimeStr}<br><span style="color:var(--text-muted); font-weight:400;">to ${endTimeStr}</span></div>
-                    <div class="timeline-body">
-                        <div class="timeline-title">${task.title}</div>
-                        <div style="display:flex; gap:4px; margin-top:4px;">
-                            <span class="badge" style="${styleStr} font-size:0.65rem;">${task.cat}</span>
-                            <span class="badge" style="background:#e5e7eb; color:#4b5563; font-size:0.65rem;">${task.period || 'Morning'} • ${task.limit}</span>
-                        </div>
+                <div class="add-task-form" style="margin-top:0; padding-top:0; border-top:none;">
+                    <input type="text" id="custom-task-title" placeholder="e.g. Cook dinner, Take JJ to school">
+                    <div class="input-group">
+                        <select id="custom-task-cat" style="flex: 1;"></select>
+                        <select id="custom-task-limit" style="width: 85px;">
+                            <option value="10 min">10 min</option>
+                            <option value="15 min">15 min</option>
+                            <option value="20 min">20 min</option>
+                            <option value="30 min">30 min</option>
+                            <option value="45 min" selected>45 min</option>
+                            <option value="60 min">60 min</option>
+                        </select>
+                        <select id="custom-task-period" style="width: 95px;">
+                            <option value="Morning">Morning</option>
+                            <option value="Afternoon">Afternoon</option>
+                            <option value="Evening">Evening</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <select id="custom-task-repeat" style="flex: 1;"></select>
+                        <button class="btn btn-primary" onclick="addCustomTask()">Add Task</button>
                     </div>
                 </div>
-            `;
-        }).join('');
-    }
-
-    function formatTime(totalMinutes) {
-        let hours = Math.floor(totalMinutes / 60);
-        let mins = totalMinutes % 60;
-        let ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12;
-        let minsStr = mins < 10 ? '0' + mins : mins;
-        return `${hours}:${minsStr} ${ampm}`;
-    }
-
-    function toggleTask(key) {
-        state.completedTasks[key] = !state.completedTasks[key];
-        saveState();
-        renderChores();
-    }
-
-    function resetDayTasks() {
-        Object.keys(state.completedTasks).forEach(k => {
-            if (k.startsWith(`${activeDayObj.dateKey}_`)) {
-                delete state.completedTasks[k];
-            }
-        });
-        saveState();
-        renderChores();
-    }
-
-    function renderShopping() {
-        const container = document.getElementById('shopping-items');
-        container.innerHTML = state.shoppingList.map((item, idx) => `
-            <div class="item-row">
-                <div class="item-left">
-                    <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleShopping(${idx})">
-                    <span class="item-text ${item.done ? 'completed' : ''}">${item.text}</span>
-                </div>
-                <span class="badge" style="background:#f1f5f9; color:#475569;">${item.cat}</span>
             </div>
-        `).join('');
-    }
 
-    function toggleShopping(idx) {
-        state.shoppingList[idx].done = !state.shoppingList[idx].done;
-        saveState();
-        renderShopping();
-    }
+            <div id="chores-list"></div>
 
-    function addShoppingItem(textStr, catStr) {
-        const input = document.getElementById('new-shop-item');
-        const catSelect = document.getElementById('new-shop-cat');
+            <!-- CATEGORY MANAGER -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Manage Custom Categories</span>
+                </div>
+                <div id="categories-display" style="margin-bottom: 12px;"></div>
+                
+                <div class="input-group" style="margin-top: 8px;">
+                    <input type="text" id="new-cat-name" placeholder="Category name">
+                    <input type="color" id="new-cat-color" value="#ec4899" style="width: 40px; height: 36px; padding: 2px; cursor: pointer; border-radius: 6px;">
+                    <button class="btn btn-secondary" onclick="addCustomCategory()">Create Category</button>
+                </div>
+            </div>
+        </div>
 
-        const text = textStr || input.value.trim();
-        const cat = catStr || catSelect.value;
+        <!-- CALENDAR / TIME-BLOCK TAB -->
+        <div id="tab-calendar" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Daily Time-Block Schedule</span>
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
+                        <label>Start At:</label>
+                        <select id="start-time-select" onchange="renderCalendar()" style="padding: 4px; border-radius: 6px; border: 1px solid var(--border-color);">
+                            <option value="6">6:00 AM</option>
+                            <option value="7" selected>7:00 AM</option>
+                            <option value="8">8:00 AM</option>
+                            <option value="9">9:00 AM</option>
+                        </select>
+                    </div>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Schedule for <strong id="cal-day-label"></strong>:</p>
+                <div id="timeline-container"></div>
+            </div>
+        </div>
 
-        if (!text) return;
+        <!-- MENU & RECIPE TAB -->
+        <div id="tab-menu" class="tab-content">
+            <div class="card">
+                <div class="card-title" style="margin-bottom: 12px;">Weekly Menu Planner</div>
+                <div id="weekly-menu-list"></div>
+            </div>
+        </div>
 
-        state.shoppingList.push({ text, cat: cat, done: false });
-        saveState();
-        renderShopping();
-        if (!textStr) input.value = '';
-    }
+        <!-- SHOPPING TAB -->
+        <div id="tab-shopping" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Shopping List</span>
+                    <button class="btn btn-secondary" onclick="clearCheckedShopping()" style="padding: 4px 8px; font-size: 0.75rem;">Clear Done</button>
+                </div>
 
-    function clearCheckedShopping() {
-        state.shoppingList = state.shoppingList.filter(item => !item.done);
-        saveState();
-        renderShopping();
-    }
+                <div style="margin-bottom: 12px; background: #eff6ff; border: 1px dashed var(--primary); padding: 12px; border-radius: 8px; text-align: center;">
+                    <label for="recipe-photo-input" class="btn btn-primary" style="cursor: pointer; width: 100%;">
+                        📷 Scan Recipe Photo / Receipt
+                    </label>
+                    <input type="file" id="recipe-photo-input" accept="image/*" style="display: none;" onchange="processRecipePhoto(event)">
+                    <div id="scan-status" class="scan-status">Scanning photo ingredients...</div>
+                </div>
 
-    async function processRecipePhoto(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+                <div id="shopping-items"></div>
 
-        const statusEl = document.getElementById('scan-status');
-        statusEl.style.display = 'block';
-        statusEl.innerText = 'Scanning recipe photo... Please wait...';
+                <div class="input-group" style="margin-top: 12px;">
+                    <input type="text" id="new-shop-item" placeholder="Add grocery item...">
+                    <select id="new-shop-cat">
+                        <option value="Produce">Produce</option>
+                        <option value="Meat">Meat</option>
+                        <option value="Dairy">Dairy</option>
+                        <option value="Pantry">Pantry</option>
+                        <option value="Household">Household</option>
+                        <option value="JJ / Kid">JJ / Kid</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="addShoppingItem()">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        try {
-            const worker = await Tesseract.createWorker('eng');
-            const ret = await worker.recognize(file);
-            await worker.terminate();
+    <!-- EDIT TASK MODAL -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <div class="card-title">Edit Task Details</div>
+            <input type="text" id="edit-task-title" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color);">
+            <div class="input-group">
+                <select id="edit-task-cat" style="flex: 1;"></select>
+                <select id="edit-task-limit" style="width: 100px;">
+                    <option value="5 min">5 min</option>
+                    <option value="10 min">10 min</option>
+                    <option value="15 min">15 min</option>
+                    <option value="20 min">20 min</option>
+                    <option value="25 min">25 min</option>
+                    <option value="30 min">30 min</option>
+                    <option value="45 min">45 min</option>
+                    <option value="60 min">60 min</option>
+                </select>
+                <select id="edit-task-period" style="width: 100px;">
+                    <option value="Morning">Morning</option>
+                    <option value="Afternoon">Afternoon</option>
+                    <option value="Evening">Evening</option>
+                </select>
+            </div>
+            
+            <div style="border-top: 1px solid var(--border-color); padding-top: 10px;">
+                <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Move Task to Another Day:</label>
+                <select id="edit-task-move-day" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.85rem;"></select>
+            </div>
 
-            const textLines = ret.data.text.split('\n');
-            let count = 0;
+            <div style="display: flex; gap: 8px; justify-content: space-between; margin-top: 12px;">
+                <button class="btn btn-danger" onclick="deleteCurrentTask()">Delete</button>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveTaskEdit()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            textLines.forEach(line => {
-                const clean = line.replace(/[^a-zA-Z0-9\s]/g, '').trim();
-                if (clean.length > 3) {
-                    const guessedCat = guessIngredientCategory(clean);
-                    addShoppingItem(clean, guessedCat);
-                    count++;
+    <nav>
+        <button class="nav-btn active" onclick="switchTab('chores', this)">
+            <span>📅</span>
+            <span>Tasks</span>
+        </button>
+        <button class="nav-btn" onclick="switchTab('calendar', this)">
+            <span>⏰</span>
+            <span>Calendar</span>
+        </button>
+        <button class="nav-btn" onclick="switchTab('menu', this)">
+            <span>🍳</span>
+            <span>Menu</span>
+        </button>
+        <button class="nav-btn" onclick="switchTab('shopping', this)">
+            <span>🛒</span>
+            <span>Shopping</span>
+        </button>
+    </nav>
+
+    <script>
+        // Rolling 7-day selector setup
+        const todayObj = new Date();
+        const dateDayMap = [];
+        let todayLabel = '';
+
+        for (let i = 0; i < 7; i++) {
+            const d = new Date();
+            d.setDate(todayObj.getDate() + i);
+            
+            const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+            const monthName = d.toLocaleDateString('en-US', { month: 'short' });
+            const dayNum = d.getDate();
+            const dayOfWeekIndex = d.getDay(); // 0 = Sun, 1 = Mon, ... 6 = Sat
+            
+            const fullLabel = `${dayName}, ${monthName} ${dayNum}`;
+            const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            
+            if (i === 0) todayLabel = fullLabel;
+
+            dateDayMap.push({ 
+                label: fullLabel, 
+                dayOfWeek: dayName, 
+                dayIndex: dayOfWeekIndex, 
+                dateKey: dateKey, 
+                isToday: i === 0 
+            });
+        }
+
+        let activeDayObj = dateDayMap[0];
+        let editingTaskId = null;
+
+        const defaultCategories = [
+            { name: 'Downstairs', color: '#2563eb', bg: '#dbeafe' },
+            { name: 'Upstairs', color: '#0284c7', bg: '#e0f2fe' },
+            { name: 'Bathroom', color: '#0d9488', bg: '#ccfbf1' },
+            { name: 'Laundry', color: '#4f46e5', bg: '#e0e7ff' },
+            { name: 'Routine & Mail', color: '#d97706', bg: '#fef3c7' },
+            { name: 'Pets', color: '#dc2626', bg: '#fee2e2' },
+            { name: 'Family & School', color: '#16a34a', bg: '#dcfce7' }
+        ];
+
+        // Recurring base template (0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat)
+        const defaultRecurringTasks = [
+            { id: '1', title: 'Vacuum Downstairs', cat: 'Downstairs', limit: '20 min', period: 'Morning', daysOfWeek: [0,1,2,3,4,5,6] },
+            { id: '2', title: 'Clean Downstairs Couch', cat: 'Downstairs', limit: '10 min', period: 'Morning', daysOfWeek: [0,1,2,3,4,5,6] },
+            { id: '3', title: 'Make Beds, Clean & Organize Bedrooms', cat: 'Upstairs', limit: '20 min', period: 'Morning', daysOfWeek: [0,1,2,3,4,5,6] },
+            { id: '4', title: 'After Dinner Walk w/ JJ', cat: 'Routine & Mail', limit: '30 min', period: 'Evening', daysOfWeek: [0,1,2,3,4,5,6] },
+            { id: '5', title: 'Mop Downstairs', cat: 'Downstairs', limit: '20 min', period: 'Morning', daysOfWeek: [2, 4, 6] },
+            { id: '6', title: 'Windex / Stainless Steel / Pledge Downstairs', cat: 'Downstairs', limit: '25 min', period: 'Morning', daysOfWeek: [4] },
+            { id: '7', title: 'Organize Pantry', cat: 'Downstairs', limit: '15 min', period: 'Afternoon', daysOfWeek: [0, 3, 6] },
+            { id: '8', title: 'Organize Fridge / Freezer', cat: 'Downstairs', limit: '20 min', period: 'Afternoon', daysOfWeek: [1, 4] },
+            { id: '9', title: 'Bathroom Deep Clean', cat: 'Bathroom', limit: '35 min', period: 'Morning', daysOfWeek: [3, 6] },
+            { id: '10', title: 'Vacuum Upstairs & Stairs + Clean Couch', cat: 'Upstairs', limit: '30 min', period: 'Morning', daysOfWeek: [1, 3, 5] },
+            { id: '11', title: 'Organize All Toys', cat: 'Upstairs', limit: '25 min', period: 'Afternoon', daysOfWeek: [1] },
+            { id: '12', title: 'Windex / Pledge Upstairs', cat: 'Upstairs', limit: '20 min', period: 'Morning', daysOfWeek: [3] },
+            { id: '13', title: 'Laundry (2 Loads + Bedding)', cat: 'Laundry', limit: '45 min', period: 'Afternoon', daysOfWeek: [0, 2, 4, 6] },
+            { id: '14', title: 'Deep Clean Laundry Room', cat: 'Laundry', limit: '30 min', period: 'Morning', daysOfWeek: [6] },
+            { id: '15', title: 'Clean Litter Box', cat: 'Pets', limit: '15 min', period: 'Morning', daysOfWeek: [6] },
+            { id: '16', title: 'Organize Mail', cat: 'Routine & Mail', limit: '15 min', period: 'Afternoon', daysOfWeek: [1] }
+        ];
+
+        let state = JSON.parse(localStorage.getItem('home_hub_state_v7')) || {
+            categories: defaultCategories,
+            recurringTasks: defaultRecurringTasks,
+            oneTimeTasks: [],
+            completedTasks: {},
+            shoppingList: [
+                { text: 'Paper Towels', cat: 'Household', done: false },
+                { text: 'Kid Snacks', cat: 'JJ / Kid', done: false }
+            ],
+            weeklyMenu: {}
+        };
+
+        function saveState() {
+            localStorage.setItem('home_hub_state_v7', JSON.stringify(state));
+        }
+
+        function getCatStyle(catName) {
+            const match = state.categories.find(c => c.name.toLowerCase() === (catName || '').toLowerCase());
+            if (match) {
+                return `background: ${match.bg}; color: ${match.color}; border: 1px solid ${match.color}40;`;
+            }
+            return `background: #e2e8f0; color: #334155;`;
+        }
+
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            el.classList.add('active');
+            if (tabId === 'calendar') renderCalendar();
+        }
+
+        function initSchedule() {
+            const selector = document.getElementById('day-selector');
+            selector.innerHTML = dateDayMap.map(d => `
+                <button class="day-btn ${d.label === activeDayObj.label ? 'active' : ''}" onclick="selectDay('${d.dateKey}')">
+                    ${d.label} ${d.isToday ? '<span class="today-badge">TODAY</span>' : ''}
+                </button>
+            `).join('');
+            
+            document.getElementById('add-task-day-label').innerText = activeDayObj.label;
+            
+            const repeatSelect = document.getElementById('custom-task-repeat');
+            repeatSelect.innerHTML = `
+                <option value="none">This Day Only</option>
+                <option value="daily">Every Day (Mon-Sun)</option>
+                <option value="school">School Week (Sun-Thu)</option>
+                <option value="weekend">Weekend (Fri-Sat)</option>
+                <option value="this_day_weekly">Every ${activeDayObj.dayOfWeek} (Indefinitely)</option>
+            `;
+
+            renderCategories();
+            renderChores();
+        }
+
+        function selectDay(dateKey) {
+            activeDayObj = dateDayMap.find(d => d.dateKey === dateKey) || dateDayMap[0];
+            initSchedule();
+            renderCalendar();
+        }
+
+        function getActiveDayTasks() {
+            const recurring = state.recurringTasks.filter(t => t.daysOfWeek.includes(activeDayObj.dayIndex));
+            const oneTime = state.oneTimeTasks.filter(t => t.dateKey === activeDayObj.dateKey);
+            return [...recurring, ...oneTime];
+        }
+
+        function renderCategories() {
+            const display = document.getElementById('categories-display');
+            const select = document.getElementById('custom-task-cat');
+            const editSelect = document.getElementById('edit-task-cat');
+
+            display.innerHTML = state.categories.map((c, i) => `
+                <span class="cat-chip" style="background: ${c.bg}; color: ${c.color}; border: 1px solid ${c.color}60;">
+                    ${c.name}
+                    <button onclick="deleteCategory(${i})" style="color: ${c.color};">×</button>
+                </span>
+            `).join('');
+
+            const catOptionsHtml = state.categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+            select.innerHTML = catOptionsHtml;
+            editSelect.innerHTML = catOptionsHtml;
+        }
+
+        function addCustomCategory() {
+            const nameInput = document.getElementById('new-cat-name');
+            const colorInput = document.getElementById('new-cat-color');
+            const name = nameInput.value.trim();
+
+            if (!name) return;
+
+            const hexColor = colorInput.value;
+            const bgTint = hexColor + '20';
+
+            state.categories.push({ name, color: hexColor, bg: bgTint });
+            saveState();
+            renderCategories();
+            renderChores();
+            nameInput.value = '';
+        }
+
+        function deleteCategory(index) {
+            state.categories.splice(index, 1);
+            saveState();
+            renderCategories();
+            renderChores();
+        }
+
+        function renderChores() {
+            const container = document.getElementById('chores-list');
+            const tasks = getActiveDayTasks();
+            
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">${activeDayObj.label} Routine</span>
+                        <span class="badge" style="background:#e2e8f0; color:#334155;">${tasks.length} tasks</span>
+                    </div>
+                    ${tasks.map((task) => {
+                        const key = `${activeDayObj.dateKey}_${task.id}`;
+                        const isDone = !!state.completedTasks[key];
+                        const styleStr = getCatStyle(task.cat);
+
+                        return `
+                            <div class="item-row">
+                                <div class="item-left">
+                                    <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleTask('${key}')">
+                                    <div>
+                                        <div class="item-text ${isDone ? 'completed' : ''}">${task.title}</div>
+                                        <div style="display:flex; gap:4px; margin-top:2px; align-items:center;">
+                                            <span class="badge" style="${styleStr}">${task.cat}</span>
+                                            <span class="badge" style="background:#f3f4f6; color:#6b7280;">${task.period || 'Morning'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="item-right">
+                                    <span class="timer-badge">⏱ ${task.limit}</span>
+                                    <button class="icon-btn" onclick="openEditModal('${task.id}')" title="Edit Task">✏️</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function addCustomTask() {
+            const titleInput = document.getElementById('custom-task-title');
+            const catSelect = document.getElementById('custom-task-cat');
+            const limitSelect = document.getElementById('custom-task-limit');
+            const periodSelect = document.getElementById('custom-task-period');
+            const repeatSelect = document.getElementById('custom-task-repeat');
+
+            const title = titleInput.value.trim();
+            if (!title) return;
+
+            const mode = repeatSelect.value;
+            const newId = 'task_' + Date.now();
+
+            if (mode === 'none') {
+                state.oneTimeTasks.push({
+                    id: newId,
+                    title,
+                    cat: catSelect.value,
+                    limit: limitSelect.value,
+                    period: periodSelect.value,
+                    dateKey: activeDayObj.dateKey
+                });
+            } else {
+                let daysOfWeek = [];
+                if (mode === 'daily') daysOfWeek = [0, 1, 2, 3, 4, 5, 6];
+                if (mode === 'school') daysOfWeek = [0, 1, 2, 3, 4];
+                if (mode === 'weekend') daysOfWeek = [5, 6];
+                if (mode === 'this_day_weekly') daysOfWeek = [activeDayObj.dayIndex];
+
+                state.recurringTasks.push({
+                    id: newId,
+                    title,
+                    cat: catSelect.value,
+                    limit: limitSelect.value,
+                    period: periodSelect.value,
+                    daysOfWeek
+                });
+            }
+
+            saveState();
+            renderChores();
+            renderCalendar();
+            titleInput.value = '';
+            repeatSelect.value = 'none';
+        }
+
+        function openEditModal(taskId) {
+            let task = state.recurringTasks.find(t => t.id === taskId) || state.oneTimeTasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            editingTaskId = taskId;
+            document.getElementById('edit-task-title').value = task.title;
+            document.getElementById('edit-task-cat').value = task.cat;
+            document.getElementById('edit-task-limit').value = task.limit;
+            document.getElementById('edit-task-period').value = task.period || 'Morning';
+
+            const moveSelect = document.getElementById('edit-task-move-day');
+            moveSelect.innerHTML = dateDayMap.map(d => `<option value="${d.dateKey}" ${d.dateKey === activeDayObj.dateKey ? 'selected' : ''}>${d.label}</option>`).join('');
+
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+            editingTaskId = null;
+        }
+
+        function saveTaskEdit() {
+            if (!editingTaskId) return;
+
+            const newTitle = document.getElementById('edit-task-title').value.trim();
+            const newCat = document.getElementById('edit-task-cat').value;
+            const newLimit = document.getElementById('edit-task-limit').value;
+            const newPeriod = document.getElementById('edit-task-period').value;
+
+            let task = state.recurringTasks.find(t => t.id === editingTaskId) || state.oneTimeTasks.find(t => t.id === editingTaskId);
+            if (task) {
+                task.title = newTitle;
+                task.cat = newCat;
+                task.limit = newLimit;
+                task.period = newPeriod;
+            }
+
+            saveState();
+            renderChores();
+            renderCalendar();
+            closeEditModal();
+        }
+
+        function deleteCurrentTask() {
+            if (!editingTaskId) return;
+
+            state.recurringTasks = state.recurringTasks.filter(t => t.id !== editingTaskId);
+            state.oneTimeTasks = state.oneTimeTasks.filter(t => t.id !== editingTaskId);
+
+            saveState();
+            renderChores();
+            renderCalendar();
+            closeEditModal();
+        }
+
+        function renderCalendar() {
+            const container = document.getElementById('timeline-container');
+            document.getElementById('cal-day-label').innerText = activeDayObj.label;
+            const tasks = getActiveDayTasks();
+            
+            let startHour = parseInt(document.getElementById('start-time-select').value) || 7;
+            let currentMinutes = startHour * 60;
+
+            if (tasks.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem; padding: 12px 0;">No tasks scheduled for this day.</p>';
+                return;
+            }
+
+            container.innerHTML = tasks.map(task => {
+                const duration = parseInt(task.limit) || 15;
+                const startTimeStr = formatTime(currentMinutes);
+                currentMinutes += duration;
+                const endTimeStr = formatTime(currentMinutes);
+                const styleStr = getCatStyle(task.cat);
+
+                return `
+                    <div class="timeline-event">
+                        <div class="timeline-time">${startTimeStr}<br><span style="color:var(--text-muted); font-weight:400;">to ${endTimeStr}</span></div>
+                        <div class="timeline-body">
+                            <div class="timeline-title">${task.title}</div>
+                            <div style="display:flex; gap:4px; margin-top:4px;">
+                                <span class="badge" style="${styleStr} font-size:0.65rem;">${task.cat}</span>
+                                <span class="badge" style="background:#e5e7eb; color:#4b5563; font-size:0.65rem;">${task.period || 'Morning'} • ${task.limit}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function formatTime(totalMinutes) {
+            let hours = Math.floor(totalMinutes / 60);
+            let mins = totalMinutes % 60;
+            let ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            let minsStr = mins < 10 ? '0' + mins : mins;
+            return `${hours}:${minsStr} ${ampm}`;
+        }
+
+        function toggleTask(key) {
+            state.completedTasks[key] = !state.completedTasks[key];
+            saveState();
+            renderChores();
+        }
+
+        function resetDayTasks() {
+            Object.keys(state.completedTasks).forEach(k => {
+                if (k.startsWith(`${activeDayObj.dateKey}_`)) {
+                    delete state.completedTasks[k];
                 }
             });
-
-            statusEl.innerText = `Successfully scanned & added ${count} items!`;
-            setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
-        } catch (err) {
-            console.error(err);
-            statusEl.innerText = 'Could not scan image. Try a clearer picture.';
+            saveState();
+            renderChores();
         }
-    }
 
-    function guessIngredientCategory(itemText) {
-        const lower = itemText.toLowerCase();
-        if (/(apple|banana|onion|garlic|tomato|lettuce|lemon|lime|potato|spinach|berry)/.test(lower)) return 'Produce';
-        if (/(chicken|beef|pork|steak|bacon|turkey|sausage|fish|salmon|meat)/.test(lower)) return 'Meat';
-        if (/(milk|cheese|butter|cream|yogurt|egg)/.test(lower)) return 'Dairy';
-        if (/(flour|sugar|oil|spice|salt|pepper|sauce|rice|pasta|can|beans)/.test(lower)) return 'Pantry';
-        if (/(snack|juice|gummy|kid|pouch|snack)/.test(lower)) return 'JJ / Kid';
-        return 'Pantry';
-    }
+        function renderShopping() {
+            const container = document.getElementById('shopping-items');
+            container.innerHTML = state.shoppingList.map((item, idx) => `
+                <div class="item-row">
+                    <div class="item-left">
+                        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleShopping(${idx})">
+                        <span class="item-text ${item.done ? 'completed' : ''}">${item.text}</span>
+                    </div>
+                    <span class="badge" style="background:#f1f5f9; color:#475569;">${item.cat}</span>
+                </div>
+            `).join('');
+        }
 
-    function renderMenu() {
-        const container = document.getElementById('weekly-menu-list');
-        container.innerHTML = dateDayMap.map(d => `
-            <div class="item-row">
-                <span style="font-weight: 600; width: 110px; font-size: 0.85rem;">${d.label}:</span>
-                <input type="text" value="${state.weeklyMenu[d.dateKey] || ''}" onchange="updateMenu('${d.dateKey}', this.value)" 
-                       style="flex: 1; padding: 6px; border: 1px solid var(--border-color); border-radius: 6px;">
-            </div>
-        `).join('');
-    }
+        function toggleShopping(idx) {
+            state.shoppingList[idx].done = !state.shoppingList[idx].done;
+            saveState();
+            renderShopping();
+        }
 
-    function updateMenu(dateKey, val) {
-        state.weeklyMenu[dateKey] = val;
-        saveState();
-    }
+        function addShoppingItem(textStr, catStr) {
+            const input = document.getElementById('new-shop-item');
+            const catSelect = document.getElementById('new-shop-cat');
 
-    // Initialize App
-    initSchedule();
-    renderShopping();
-    renderMenu();
-</script>
+            const text = textStr || input.value.trim();
+            const cat = catStr || catSelect.value;
+
+            if (!text) return;
+
+            state.shoppingList.push({ text, cat: cat, done: false });
+            saveState();
+            renderShopping();
+            if (!textStr) input.value = '';
+        }
+
+        function clearCheckedShopping() {
+            state.shoppingList = state.shoppingList.filter(item => !item.done);
+            saveState();
+            renderShopping();
+        }
+
+        async function processRecipePhoto(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('scan-status');
+            statusEl.style.display = 'block';
+            statusEl.innerText = 'Scanning recipe photo... Please wait...';
+
+            try {
+                const worker = await Tesseract.createWorker('eng');
+                const ret = await worker.recognize(file);
+                await worker.terminate();
+
+                const textLines = ret.data.text.split('\n');
+                let count = 0;
+
+                textLines.forEach(line => {
+                    const clean = line.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+                    if (clean.length > 3) {
+                        const guessedCat = guessIngredientCategory(clean);
+                        addShoppingItem(clean, guessedCat);
+                        count++;
+                    }
+                });
+
+                statusEl.innerText = `Successfully scanned & added ${count} items!`;
+                setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
+            } catch (err) {
+                console.error(err);
+                statusEl.innerText = 'Could not scan image. Try a clearer picture.';
+            }
+        }
+
+        function guessIngredientCategory(itemText) {
+            const lower = itemText.toLowerCase();
+            if (/(apple|banana|onion|garlic|tomato|lettuce|lemon|lime|potato|spinach|berry)/.test(lower)) return 'Produce';
+            if (/(chicken|beef|pork|steak|bacon|turkey|sausage|fish|salmon|meat)/.test(lower)) return 'Meat';
+            if (/(milk|cheese|butter|cream|yogurt|egg)/.test(lower)) return 'Dairy';
+            if (/(flour|sugar|oil|spice|salt|pepper|sauce|rice|pasta|can|beans)/.test(lower)) return 'Pantry';
+            if (/(snack|juice|gummy|kid|pouch|snack)/.test(lower)) return 'JJ / Kid';
+            return 'Pantry';
+        }
+
+        function renderMenu() {
+            const container = document.getElementById('weekly-menu-list');
+            container.innerHTML = dateDayMap.map(d => `
+                <div class="item-row">
+                    <span style="font-weight: 600; width: 110px; font-size: 0.85rem;">${d.label}:</span>
+                    <input type="text" value="${state.weeklyMenu[d.dateKey] || ''}" onchange="updateMenu('${d.dateKey}', this.value)" 
+                           style="flex: 1; padding: 6px; border: 1px solid var(--border-color); border-radius: 6px;">
+                </div>
+            `).join('');
+        }
+
+        function updateMenu(dateKey, val) {
+            state.weeklyMenu[dateKey] = val;
+            saveState();
+        }
+
+        // Initialize App
+        initSchedule();
+        renderShopping();
+        renderMenu();
+    </script>
+</body>
+</html>
+
+```
